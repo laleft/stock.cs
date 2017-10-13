@@ -1,0 +1,15 @@
+<mvc:View
+	controllerName="cs.stock.controller.articulos"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns="sap.m">
+	<List
+		headerText="Artículos"
+        noDataText="No products available"
+		items="{
+			path: '/'
+		}" >
+		<StandardListItem
+			title="{codigo}"
+			description="{descripcion}"/>
+	</List>
+</mvc:View>

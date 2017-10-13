@@ -1,0 +1,99 @@
+{
+    "_version" : "0.1.0",
+    "sap.app" : {
+        "_version" :"0.1.0",
+        "id" : "cs.stock",
+        "type" : "application",
+        "i18n" : "i18n/i18n.properties",
+        "title" : "{{appTitle}}",
+        "description" : "{{appDescription}}",
+        "applicationVersion" : {
+            "version" : "0.1.0"
+        }
+    },
+    "sap.ui": {
+		"_version": "1.1.0",
+		"technology": "UI5",
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		},
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		},
+		"supportedThemes": [
+			"sap_hcb",
+			"sap_bluecrystal",
+			"sap_belize"
+		]
+	},
+    "sap.ui5": {
+		"_version": "0.1.0",
+		"rootView": "cs.stock.view.App",
+		"dependencies": {
+			"minUI5Version": "1.30",
+			"libs": {
+				"sap.ui.core": {},
+				"sap.m": {},
+				"sap.tnt": {},
+				"sap.ui.layout": {}
+			}
+		},
+		"models": {
+            "i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"settings": {
+					"bundleName": "cs.stock.i18n.i18n"
+				}
+			},
+            "topMenu": {
+				"type": "sap.ui.model.json.JSONModel",
+				"uri": "model/sideMenuItems.json"
+			},
+            "alerts" : {
+                "type" : "sap.ui.model.json.JSONModel",
+                "uri" : "model/alerts.json"
+            }
+		},
+		"resources": {
+			"css": [
+				{
+					"uri": "css/style.css"
+				}
+			]
+		},
+		"routing": {
+			"config": {
+				"routerClass": "sap.m.routing.Router",
+				"controlId": "mainContents",
+				"viewType": "XML",
+				"controlAggregation": "pages",
+				"viewPath": "cs.stock.view",
+				"async": true
+			},
+			"routes": [
+				{
+					"pattern": "",
+					"name": "home",
+					"target": "home"
+				},
+				{
+					"pattern": "productList",
+					"name": "productList",
+					"target": "ProductList"
+				}
+			],
+			"targets": {
+				"home": {
+					"viewName": "Home"
+				},
+				"ProductList": {
+					"viewName": "Product.List"
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,67 @@
+<mvc:View class="sapUiSizeCompact"
+    controllerName="cs.stock.controller.Product.List"
+    xmlns:l="sap.ui.layout"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:t="sap.ui.table"
+    xmlns="sap.m">
+    
+    <Page
+		showHeader="true"
+        title="Artículos"
+		enableScrolling="true"
+		class="sapUiContentPadding"
+		showNavButton="true" >
+
+		<content>
+			<Table
+				id="idProductsTable"
+				items="{/}">
+				<headerToolbar>
+					<OverflowToolbar id="otbSubheader">
+                        <Button text="Agregar" type="Default" icon="sap-icon://add"/>
+						<ToolbarSpacer/>
+						<SearchField id="maxPrice" liveChange="onFilter">
+							<layoutData><OverflowToolbarLayoutData minWidth="200px" maxWidth="300px" shrinkable="true"/></layoutData>
+						</SearchField>
+						<Button text="Reset" type="Transparent" press="onReset"/>
+						<OverflowToolbarButton type="Transparent" text="Sort" icon="sap-icon://sort" press="onSort"/>
+						<OverflowToolbarButton type="Transparent" text="Group" icon="sap-icon://group-2" press="onGroup"/>
+					</OverflowToolbar>
+				</headerToolbar>
+				<columns>
+					<Column><Text text="Codigo" /></Column>
+					<Column><Text text="Marca"/></Column>
+					<Column><Text text="Categoria"/></Column>
+				</columns>
+				<items>
+					<ColumnListItem>
+						<cells>
+							<ObjectIdentifier title="{descripcion}" text="{codigo}" />
+							<Text text="{marca/marca}" />
+							<Text text="{marca/categoria/categoria}" />
+						</cells>
+					</ColumnListItem>
+				</items>
+			</Table>
+		</content>
+		<footer>
+			<OverflowToolbar id="otbFooter">
+				<ToolbarSpacer/>
+				<Button type="Accept" text="Accept">
+					<layoutData><OverflowToolbarLayoutData moveToOverflow="false" /></layoutData>
+				</Button>
+				<Button type="Reject" text="Reject">
+					<layoutData><OverflowToolbarLayoutData moveToOverflow="false" /></layoutData>
+				</Button>
+				<OverflowToolbarButton text="Delete" icon="sap-icon://delete"/>
+				<OverflowToolbarButton text="Edit" icon="sap-icon://edit"/>
+				<OverflowToolbarButton text="Add" icon="sap-icon://add"/>
+				<OverflowToolbarButton text="Favorite" icon="sap-icon://favorite"/>
+				<OverflowToolbarButton text="Flag" icon="sap-icon://flag"/>
+
+			</OverflowToolbar>
+		</footer>
+
+	</Page>
+
+</mvc:View>
