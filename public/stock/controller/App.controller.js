@@ -23,7 +23,7 @@ sap.ui.define([
 
 			onInit: function() {
 				//this._setToggleButtonTooltip(!sap.ui.Device.system.desktop);
-				//this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
+				this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
 				this.getOwnerComponent().getRouter().attachRouteMatched(this.onRouteMatched, this);
 			},
 
