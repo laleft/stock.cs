@@ -1,4 +1,4 @@
-<mvc:View class="sapUiSizeCompact"
+<mvc:View
     controllerName="cs.stock.controller.Product.List"
     xmlns:l="sap.ui.layout"
     xmlns:mvc="sap.ui.core.mvc"
@@ -32,6 +32,7 @@
 					<Column><Text text="Codigo" /></Column>
 					<Column><Text text="Marca"/></Column>
 					<Column><Text text="Categoria"/></Column>
+					<Column><Text text="Stock Actual"/></Column>
 				</columns>
 				<items>
 					<ColumnListItem>
@@ -39,6 +40,7 @@
 							<ObjectIdentifier title="{descripcion}" text="{codigo}" />
 							<Text text="{marca/marca}" />
 							<Text text="{marca/categoria/categoria}" />
+							<Text text="{stock_actual}" />
 						</cells>
 					</ColumnListItem>
 				</items>
