@@ -34,7 +34,7 @@ sap.ui.define([
 				oModel.setProperty("/alerts/notificationCounter", iNotificationCounter);
 			},
 
-			irAproductList: function(oEvent) {
+			onNavToProductList: function(oEvent) {
 				this.getRouter().navTo("productList");
 			},
 

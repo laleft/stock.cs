@@ -1,13 +1,11 @@
-<mvc:View height="100%"
-	controllerName="cs.stock.controller.App"
-	xmlns:mvc="sap.ui.core.mvc"
-	xmlns="sap.m"
-	xmlns:tnt="sap.tnt">
-
-	    <tnt:ToolHeader>
+<mvc:View height="100%" controllerName="cs.stock.controller.App" 
+    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns="sap.m" 
+    xmlns:tnt="sap.tnt">
+    <tnt:ToolHeader>
         <Button type="Transparent" icon="sap-icon://home" press="volver" />
         <ToolbarSpacer width="20px" />
-        <Button text="Artículos" press="irAproductList" type="Transparent">
+        <Button text="Artículos" press="onNavToProductList" type="Transparent">
             <layoutData>
                 <OverflowToolbarLayoutData priority="Low" />
             </layoutData>
@@ -58,9 +56,6 @@
                 <OverflowToolbarLayoutData priority="NeverOverflow" />
             </layoutData>
         </Button>
-
     </tnt:ToolHeader>
-
-	<App id="mainContents" />
-
+    <App id="mainContents" />
 </mvc:View>

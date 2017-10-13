@@ -81,17 +81,26 @@
 					"target": "home"
 				},
 				{
-					"pattern": "productList",
+					"pattern": "product/list",
 					"name": "productList",
-					"target": "ProductList"
+					"target": "productList"
+				},
+				{
+					"pattern": "product/add",
+					"name": "productAdd",
+					"target": "productAdd"
 				}
 			],
 			"targets": {
 				"home": {
 					"viewName": "Home"
 				},
-				"ProductList": {
+				"productList": {
 					"viewName": "Product.List"
+				},
+				"productAdd":
+				{
+					"viewName": "Product.Add"
 				}
 			}
 		}

@@ -35,6 +35,10 @@ sap.ui.define([
                 
             //oModel.setData(result);
             //sap.ui.getCore().byId(this.getView().sId).getModel().loadData('http://nsstock.app/api/articulo/' + oInput.getSource().getValue()).refresh(true);
+        },
+
+        onNavToAdd: function(oEvent) {
+            this.getRouter().navTo("productAdd");
         }
     });
 });
