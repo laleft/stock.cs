@@ -3,7 +3,7 @@
     xmlns="sap.m" 
     xmlns:tnt="sap.tnt">
     <tnt:ToolHeader>
-        <Button type="Transparent" icon="sap-icon://home" press="volver" />
+        <Button type="Transparent" icon="sap-icon://home" press="onNavToHome" />
         <ToolbarSpacer width="20px" />
         <Button text="Artículos" press="onNavToProductList" type="Transparent">
             <layoutData>

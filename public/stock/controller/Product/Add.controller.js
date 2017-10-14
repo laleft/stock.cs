@@ -7,7 +7,7 @@ sap.ui.define([
     return BaseController.extend('cs.stock.controller.Product.Add', {
 
         onInit: function() {
-            alert('ALGO');
+            
         }
 
     });

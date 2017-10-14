@@ -49,6 +49,10 @@ sap.ui.define([
 				}
 			},
 
+			onNavToHome: function(oEvent) {
+				this.getRouter().navTo('home');
+			},
+
 			/**
 			 * Convenience method for accessing the router.
 			 * @public
