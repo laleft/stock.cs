@@ -49,7 +49,7 @@
 					"bundleName": "cs.stock.i18n.i18n"
 				}
 			},
-            "topMenu": {
+            "side": {
 				"type": "sap.ui.model.json.JSONModel",
 				"uri": "model/sideMenuItems.json"
 			},

@@ -1,6 +1,7 @@
 sap.ui.define([
-		"sap/ui/core/mvc/Controller"
-	], function (Controller) {
+		"sap/ui/core/mvc/Controller",
+		"sap/ui/core/routing/History"
+	], function (Controller, History) {
 		"user strict";
 
 		return Controller.extend("cs.stock.controller.BaseController", {
@@ -33,7 +34,19 @@ sap.ui.define([
 			 */
 			setModel : function (oModel, sName) {
 				return this.getView().setModel(oModel, sName);
-			}
+			},
+
+			onBack: function(oEvent) {
+				var oHistory, sPreviousHash;
+				oHistory = History.getInstance();
+				sPreviousHash = oHistory.getPreviousHash();
+				if (sPreviousHash !== undefined) {
+					window.history.go(-1);
+				} else {
+					this.getRouter().navTo("home", {}, true /*no history*/);
+				}
+			},
+
 		});
 
 	});

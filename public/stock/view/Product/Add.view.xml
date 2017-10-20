@@ -1,26 +1,63 @@
 <mvc:View controllerName="cs.stock.controller.Product.Add" 
-    xmlns:l="sap.ui.layout"
+    xmlns:l="sap.ui.layout" 
     xmlns:f="sap.ui.layout.form" 
-    xmlns:mvc="sap.ui.core.mvc"  
+    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns:core="sap.ui.core" 
     xmlns="sap.m">
-
-    <Page
-		id="page"
-		showHeader="false" >
-        <f:SimpleForm
-            title="Agregar Articulo"
-            >
-
-        </f:SimpleForm>
-		<footer>
-			<Bar>
-				<contentRight>
-					<Button id="edit" text="Edit" press="handleEditPress" />
-					<Button id="save" text="Save" type="Emphasized" visible="false" press="handleSavePress" />
-					<Button id="cancel" text="Cancel" visible="false" press="handleCancelPress" />
-				</contentRight>
-			</Bar>
-		</footer>
-	</Page>
-
+    <Page id="page" showHeader="true" title="Agregar Artículo" showNavButton="true" navButtonPress="onBack">
+        <VBox class="sapUiSmallMargin">
+            <f:SimpleForm id="SimpleFormChange354wideDual" editable="true" layout="ResponsiveGridLayout" title="Información Básica" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" singleContainerFullSize="false">
+                <f:content>
+                    <core:Title text="Artículo" />
+                    <Label text="Código" />
+                    <Input id="codigo" />
+                    <Label text="Descripción" />
+                    <Input id="descripcion"></Input>
+                    <Label text="IVA" />
+                    <Select forceSelection="false" selectedKey="G" items="{
+                            path: 'oIvaTipo>/iva_tipo',
+                            sorter: { path: 'oIvaTipo>nombre' }
+                        }">
+                        <core:Item key="{oIvaTipo>iva_tipo}" text="{oIvaTipo>nombre}" />
+                    </Select>
+                    <Input id="iva_valor" placeholder="Valor..." description="%"/>
+                    <Label text="Costo/Ganancia"/>
+                    <Input id="costo" placeholder="Costo..." description="Costo"/>
+                    <Label text="Coeficiente de ganancia 1"/>
+                    <Input id="coeficiente_ganancia_1" placeholder="Coeficiente de ganancia 1" description="CG1"/>
+                    <Label text="Coeficiente de ganancia 2"/>
+                    <Input id="coeficiente_ganancia_2" placeholder="Coeficiente de ganancia 2" description="CG2"/>
+                    <Label text="ZIP Code and City" />
+                    <Input value="{ZIPCode}">
+                        <layoutData>
+                            <l:GridData span="XL2 L1 M3 S4" />
+                        </layoutData>
+                    </Input>
+                    <Input value="{City}" />
+                    <Label text="Country where the contact is located" />
+                    <Select id="country" selectedKey="{Country}">
+                        <items>
+                            <core:Item text="England" key="England"/>
+                            <core:Item text="Germany" key="Germany"/>
+                            <core:Item text="USA" key="USA"/>
+                        </items>
+                    </Select>
+                    <core:Title text="Online" />
+                    <Label text="Web page of the contact" />
+                    <Input value="{Url}" />
+                    <Label text="Twitter account of the contact" />
+                    <Input value="{Twitter}" />
+                </f:content>
+            </f:SimpleForm>
+        </VBox>
+        <footer>
+            <Bar>
+                <contentRight>
+                    <Button id="edit" text="Edit" press="handleEditPress" />
+                    <Button id="save" text="Save" type="Emphasized" visible="false" press="handleSavePress" />
+                    <Button id="cancel" text="Cancel" visible="false" press="handleCancelPress" />
+                </contentRight>
+            </Bar>
+        </footer>
+    </Page>
 </mvc:View>

@@ -6,7 +6,7 @@
 			"key": "home"
 		},
 		{
-			"title": "Buscar Artículos",
+			"title": "Artículos",
 			"icon": "sap-icon://product",
 			"key": "productList"
 		},

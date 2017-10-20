@@ -1,61 +1,102 @@
 <mvc:View height="100%" controllerName="cs.stock.controller.App" 
     xmlns:mvc="sap.ui.core.mvc" 
     xmlns="sap.m" 
-    xmlns:tnt="sap.tnt">
-    <tnt:ToolHeader>
-        <Button type="Transparent" icon="sap-icon://home" press="onNavToHome" />
-        <ToolbarSpacer width="20px" />
-        <Button text="Artículos" press="onNavToProductList" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <Button text="Edit" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <Button text="View" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <Button text="Navigate" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <Button text="Code" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <Button text="Refactor" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <Button text="Run" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <Button text="Tools" type="Transparent">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="Low" />
-            </layoutData>
-        </Button>
-        <tnt:ToolHeaderUtilitySeparator />
-        <ToolbarSpacer>
-            <layoutData>
-                <OverflowToolbarLayoutData priority="NeverOverflow" minWidth="20px" />
-            </layoutData>
-        </ToolbarSpacer>
-        <Button text="Alan Smith" type="Transparent" press="handleUserNamePress">
-            <layoutData>
-                <OverflowToolbarLayoutData priority="NeverOverflow" />
-            </layoutData>
-        </Button>
-    </tnt:ToolHeader>
-    <App id="mainContents" />
+    xmlns:tnt="sap.tnt"
+    >
+    <tnt:ToolPage id="toolPage">
+		<tnt:header>
+			<tnt:ToolHeader>
+				<Button
+						icon="sap-icon://home"
+						type="Transparent"
+						press="onNavToHome">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="NeverOverflow" />
+					</layoutData>
+				</Button>
+				<ToolbarSpacer width="20px" />
+				<Button text="Archivo" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<Button text="Edit" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<Button text="View" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<Button text="Navigate" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<Button text="Code" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<Button text="Refactor" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<Button text="Run" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<Button text="Tools" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="Low" />
+					</layoutData>
+				</Button>
+				<tnt:ToolHeaderUtilitySeparator />
+				<ToolbarSpacer>
+					<layoutData>
+						<OverflowToolbarLayoutData priority="NeverOverflow" minWidth="20px" />
+					</layoutData>
+				</ToolbarSpacer>
+				<Button text="Alan Smith" type="Transparent" press="handleUserNamePress">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="NeverOverflow" />
+					</layoutData>
+				</Button>
+
+			</tnt:ToolHeader>
+		</tnt:header>
+		<tnt:sideContent>
+			<tnt:SideNavigation expanded="false"
+								itemSelect="onItemSelect">
+				<tnt:NavigationList items="{path: 'side>/navigation'}">
+					<tnt:NavigationListItem text="{side>title}"
+											icon="{side>icon}"
+											enabled="{side>enabled}"
+											expanded="{side>expanded}"
+											items="{path: 'side>items', templateShareable: false}"
+											key="{side>key}">
+						<tnt:NavigationListItem text="{title}"
+												key="{key}"
+												enabled="{enabled}">
+						</tnt:NavigationListItem>
+					</tnt:NavigationListItem>
+				</tnt:NavigationList>
+				<tnt:fixedItem>
+					<tnt:NavigationList items="{path: '/fixedNavigation'}">
+						<tnt:NavigationListItem text="{title}"
+												icon="{icon}">
+						</tnt:NavigationListItem>
+					</tnt:NavigationList>
+				</tnt:fixedItem>
+			</tnt:SideNavigation>
+		</tnt:sideContent>
+		<tnt:mainContents>
+			<NavContainer id="mainContents">
+			</NavContainer>
+		</tnt:mainContents>
+	</tnt:ToolPage>
 </mvc:View>

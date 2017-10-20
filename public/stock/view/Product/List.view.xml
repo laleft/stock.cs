@@ -1,27 +1,27 @@
-<mvc:View
-    controllerName="cs.stock.controller.Product.List"
-    xmlns:l="sap.ui.layout"
-    xmlns:mvc="sap.ui.core.mvc"
-    xmlns:t="sap.ui.table"
-    xmlns="sap.m">
-    
-    <Page
-		showHeader="true"
-        title="Artículos"
-		enableScrolling="true"
-		class="sapUiContentPadding"
-		showNavButton="true" >
-
+<mvc:View controllerName="cs.stock.controller.Product.List" 
+	xmlns:l="sap.ui.layout" 
+	xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:t="sap.ui.table" 
+	xmlns="sap.m">
+	<Page showHeader="true" title="Artículos" enableScrolling="true" class="sapUiContentPadding" showNavButton="true" navButtonPress="onBack	">
 		<content>
-			<Table
-				id="idProductsTable"
-				items="{/}">
+			<Table id="idProductsTable" items="{/}">
 				<headerToolbar>
 					<OverflowToolbar id="otbSubheader">
-                        <Button text="Agregar" type="Default" icon="sap-icon://add" press="onNavToAdd"/>
+						<Button text="Agregar" type="Default" icon="sap-icon://add" press="onNavToAdd"/>
 						<ToolbarSpacer/>
+						<Input width="400px"  
+							type="Text" 
+							placeholder="Enter Product..." 
+							enabled="true" 
+							editable="true" 
+							showValueHelp="true" 
+							valueHelpOnly="true" 
+							valueHelpRequest="handleSelectDialogPress" />
 						<SearchField id="maxPrice" liveChange="onFilter">
-							<layoutData><OverflowToolbarLayoutData minWidth="200px" maxWidth="300px" shrinkable="true"/></layoutData>
+							<layoutData>
+								<OverflowToolbarLayoutData minWidth="200px" maxWidth="300px" shrinkable="true"/>
+							</layoutData>
 						</SearchField>
 						<Button text="Reset" type="Transparent" press="onReset"/>
 						<OverflowToolbarButton type="Transparent" text="Sort" icon="sap-icon://sort" press="onSort"/>
@@ -29,10 +29,18 @@
 					</OverflowToolbar>
 				</headerToolbar>
 				<columns>
-					<Column><Text text="Codigo" /></Column>
-					<Column><Text text="Marca"/></Column>
-					<Column><Text text="Categoria"/></Column>
-					<Column><Text text="Stock Actual"/></Column>
+					<Column>
+						<Text text="Codigo" />
+					</Column>
+					<Column>
+						<Text text="Marca"/>
+					</Column>
+					<Column>
+						<Text text="Categoria"/>
+					</Column>
+					<Column>
+						<Text text="Stock Actual"/>
+					</Column>
 				</columns>
 				<items>
 					<ColumnListItem>
@@ -47,5 +55,4 @@
 			</Table>
 		</content>
 	</Page>
-
 </mvc:View>
