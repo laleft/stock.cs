@@ -7,8 +7,15 @@ use App\Categoria;
 
 class CategoriaController extends Controller
 {
-    public function index()
-    {
+    public function index(Request $request)
+    {   
+        $id_marca = $request->get('id_marca');
+        if($id_marca)
+        {
+            $id_categoria = \App\Marca::select('id_categoria')->where('id_marca', $id_marca)->first();
+            return Categoria::where('id_categoria', $id_categoria->id_categoria)->first();
+        }
+        
         return Categoria::get();
     }
 

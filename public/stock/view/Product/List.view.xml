@@ -5,19 +5,32 @@
 	xmlns="sap.m">
 	<Page showHeader="true" title="Artículos" enableScrolling="true" class="sapUiContentPadding" showNavButton="true" navButtonPress="onBack	">
 		<content>
-			<Table id="idProductsTable" items="{/}">
+			<Table id="idProductsTable" items="{/}" 
+				growing="true"
+				growingThreshold="10"
+				enableBusyIndicator="true">
 				<headerToolbar>
 					<OverflowToolbar id="otbSubheader">
 						<Button text="Agregar" type="Default" icon="sap-icon://add" press="onNavToAdd"/>
 						<ToolbarSpacer/>
-						<Input width="400px"  
+						<Input width="400px"
+							id="inputCategoria"
 							type="Text" 
-							placeholder="Enter Product..." 
+							placeholder="Seleccione una categoría..." 
 							enabled="true" 
 							editable="true" 
 							showValueHelp="true" 
 							valueHelpOnly="true" 
 							valueHelpRequest="handleSelectDialogPress" />
+						<Input width="400px"
+							id="inputMarca"
+							type="Text" 
+							placeholder="Seleccione una marca..." 
+							enabled="true" 
+							editable="false" 
+							showValueHelp="true" 
+							valueHelpOnly="true" 
+							valueHelpRequest="handleSelectMarcaDialogPress" />
 						<SearchField id="maxPrice" liveChange="onFilter">
 							<layoutData>
 								<OverflowToolbarLayoutData minWidth="200px" maxWidth="300px" shrinkable="true"/>
@@ -33,10 +46,10 @@
 						<Text text="Codigo" />
 					</Column>
 					<Column>
-						<Text text="Marca"/>
+						<Text text="Categoria"/>
 					</Column>
 					<Column>
-						<Text text="Categoria"/>
+						<Text text="Marca"/>
 					</Column>
 					<Column>
 						<Text text="Stock Actual"/>
@@ -46,8 +59,8 @@
 					<ColumnListItem>
 						<cells>
 							<ObjectIdentifier title="{descripcion}" text="{codigo}" />
-							<Text text="{marca/marca}" />
-							<Text text="{marca/categoria/categoria}" />
+							<Text text="{marca}" />
+							<Text text="{categoria}" />
 							<Text text="{stock_actual}" />
 						</cells>
 					</ColumnListItem>

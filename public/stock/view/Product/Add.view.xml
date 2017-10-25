@@ -6,58 +6,50 @@
     xmlns="sap.m">
     <Page id="page" showHeader="true" title="Agregar Artículo" showNavButton="true" navButtonPress="onBack">
         <VBox class="sapUiSmallMargin">
-            <f:SimpleForm id="SimpleFormChange354wideDual" editable="true" layout="ResponsiveGridLayout" title="Información Básica" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" singleContainerFullSize="false">
+            <f:SimpleForm id="addProduct" editable="true" layout="ResponsiveGridLayout" title="Información Básica" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" singleContainerFullSize="false">
                 <f:content>
                     <core:Title text="Artículo" />
                     <Label text="Código" />
-                    <Input id="codigo" />
+                    <Input id="codigo" value="{/codigo}"/>
                     <Label text="Descripción" />
-                    <Input id="descripcion"></Input>
+                    <Input id="descripcion" value="{/descripcion}"></Input>
                     <Label text="IVA" />
-                    <Select forceSelection="false" selectedKey="G" items="{
-                            path: 'oIvaTipo>/iva_tipo',
-                            sorter: { path: 'oIvaTipo>nombre' }
-                        }">
-                        <core:Item key="{oIvaTipo>iva_tipo}" text="{oIvaTipo>nombre}" />
+                    <Select forceSelection="false" selectedKey="{/iva_tipo}">
+                        <core:Item key="G" text="Gravado" />
+                        <core:Item key="E" text="Exento" />
                     </Select>
-                    <Input id="iva_valor" placeholder="Valor..." description="%"/>
-                    <Label text="Costo/Ganancia"/>
-                    <Input id="costo" placeholder="Costo..." description="Costo"/>
+                    <Input id="iva_valor" placeholder="Valor..." value="{/iva_valor}" description="%"/>
+                    <Label text="Costo"/>
+                    <Input id="costo" value="{/costo}"/>
                     <Label text="Coeficiente de ganancia 1"/>
-                    <Input id="coeficiente_ganancia_1" placeholder="Coeficiente de ganancia 1" description="CG1"/>
+                    <Input id="coeficiente_ganancia_1" value="{/coeficiente_ganancia_1}" />
+                    <Text text="Precio Minorista: {= (${/costo} * ${/coeficiente_ganancia_1}).toFixed(2)}"/>
                     <Label text="Coeficiente de ganancia 2"/>
-                    <Input id="coeficiente_ganancia_2" placeholder="Coeficiente de ganancia 2" description="CG2"/>
-                    <Label text="ZIP Code and City" />
-                    <Input value="{ZIPCode}">
-                        <layoutData>
-                            <l:GridData span="XL2 L1 M3 S4" />
-                        </layoutData>
-                    </Input>
-                    <Input value="{City}" />
-                    <Label text="Country where the contact is located" />
-                    <Select id="country" selectedKey="{Country}">
-                        <items>
-                            <core:Item text="England" key="England"/>
-                            <core:Item text="Germany" key="Germany"/>
-                            <core:Item text="USA" key="USA"/>
-                        </items>
-                    </Select>
-                    <core:Title text="Online" />
-                    <Label text="Web page of the contact" />
-                    <Input value="{Url}" />
-                    <Label text="Twitter account of the contact" />
-                    <Input value="{Twitter}" />
-                </f:content>
-            </f:SimpleForm>
-        </VBox>
-        <footer>
-            <Bar>
-                <contentRight>
-                    <Button id="edit" text="Edit" press="handleEditPress" />
-                    <Button id="save" text="Save" type="Emphasized" visible="false" press="handleSavePress" />
-                    <Button id="cancel" text="Cancel" visible="false" press="handleCancelPress" />
-                </contentRight>
-            </Bar>
-        </footer>
-    </Page>
-</mvc:View>
+                    <Input id="coeficiente_ganancia_2" value="{/coeficiente_ganancia_2}" />
+                    <Text text="Precio Mayorista: {= (${/costo} * ${/coeficiente_ganancia_2}).toFixed(2)}"/>
+                    <Label text="Stock actual"/>
+                    <Input id="stock_actual"/>
+                    <Label text="Marca / Categoría"/>
+                        <Input id="id_marca" type="Text" submit="handleSuggest" selectedKey="{/id_marca}" placeholder="Ingrese una marca..." showSuggestion="true" suggestionItems="{marcas>/}">
+                            <suggestionItems>
+                                <core:Item text="{marcas>marca}" key="{marcas>id_marca}" />
+                            </suggestionItems>
+                        </Input>
+                        <Input id="id_categoria" type="Text" selectedKey="{/id_categoria}" placeholder="Ingrese una categoria..." showSuggestion="true" suggestionItems="{categorias>/}">
+                            <suggestionItems>
+                                <core:Item text="{categorias>categoria}" key="{categorias>id_categoria}" />
+                            </suggestionItems>
+                        </Input>
+                    </f:content>
+                </f:SimpleForm>
+            </VBox>
+            <footer>
+                <Bar>
+                    <contentRight>
+                        <Button id="save" text="Save" type="Emphasized" press="handleSavePress" />
+                        <Button id="cancel" text="Cancel" visible="false" press="handleCancelPress" />
+                    </contentRight>
+                </Bar>
+            </footer>
+        </Page>
+    </mvc:View>

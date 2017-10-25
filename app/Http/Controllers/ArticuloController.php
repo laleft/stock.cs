@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Articulo;
 use App\Categoria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ArticuloController extends Controller
 {
@@ -23,9 +24,14 @@ class ArticuloController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        $articulo = new Articulo;
+        $articulo->create([
+            'codigo' => $request->get('codigo'),
+            'descripcion' => $request->get('descripcion'),
+            
+        ]);
     }
 
     /**
@@ -93,6 +99,16 @@ class ArticuloController extends Controller
     public function ultimos()
     {
         return Articulo::with('marca', 'marca.categoria')->orderBy('created_at', 'desc')->take(10)->get();
+    }
+
+    public function filtrar(Request $request)
+    {
+        $articulos = DB::table('articulos')
+        ->join('marcas', 'marcas.id_marca', '=', 'articulos.id_marca')
+        ->join('categorias', 'categorias.id_categoria', '=', 'marcas.id_categoria')
+        ->where('categorias.id_categoria', '=', $request->input('id_categoria'))
+        ->get();
+        return $articulos;
     }
 
 }
