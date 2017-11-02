@@ -26,11 +26,48 @@ class ArticuloController extends Controller
      */
     public function create(Request $request)
     {
+
+        if(empty($request->get('id_categoria')))
+        {
+            $categoria = new \App\Categoria;
+            $categoria->categoria = $request->get('categoria');
+            $categoria->save();
+            $id_categoria = $categoria->id_categoria;
+        }
+        else
+        {
+            $id_categoria = $request->get('id_categoria');
+        }
+
+        if(empty($request->get('id_marca')))
+        {
+            $marca = new \App\Marca;
+            $marca->marca = $request->get('marca');
+            $marca->id_categoria = $id_categoria;
+            $marca->save();
+            $id_marca = $marca->id_marca;
+
+            
+        }
+        else
+        {
+            $id_marca = $request->get('id_marca');
+        }
+
         $articulo = new Articulo;
         $articulo->create([
+
             'codigo' => $request->get('codigo'),
             'descripcion' => $request->get('descripcion'),
-            
+            'iva_tipo' => $request->get('iva_tipo'),
+            'iva_valor' => $request->get('iva_valor'),
+            'costo' => $request->get('costo'),
+            'precio_minorista' => ($request->get('costo') * $request->get('coeficiente_ganancia_1')),
+            'precio_mayorista' => ($request->get('costo') * $request->get('coeficiente_ganancia_2')),
+            'coeficiente_ganancia_1' => $request->get('coeficiente_ganancia_1'),
+            'coeficiente_ganancia_2' => $request->get('coeficiente_ganancia_2'),
+            'stock_actual' => $request->get('stock_actual'),
+            'id_marca' => $id_marca
         ]);
     }
 
@@ -108,6 +145,9 @@ class ArticuloController extends Controller
         ->join('categorias', 'categorias.id_categoria', '=', 'marcas.id_categoria')
         ->where('categorias.id_categoria', '=', $request->input('id_categoria'))
         ->get();
+
+        \Debugbar::info($articulos);
+
         return $articulos;
     }
 

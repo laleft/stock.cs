@@ -6,13 +6,31 @@
     xmlns="sap.m">
     <Page id="page" showHeader="true" title="Agregar Artículo" showNavButton="true" navButtonPress="onBack">
         <VBox class="sapUiSmallMargin">
-            <f:SimpleForm id="addProduct" editable="true" layout="ResponsiveGridLayout" title="Información Básica" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" singleContainerFullSize="false">
+            <f:SimpleForm id="addProductForm" editable="true" layout="ResponsiveGridLayout" title="Información Básica" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" singleContainerFullSize="false">
                 <f:content>
                     <core:Title text="Artículo" />
-                    <Label text="Código" />
-                    <Input id="codigo" value="{/codigo}"/>
-                    <Label text="Descripción" />
-                    <Input id="descripcion" value="{/descripcion}"></Input>
+                    <Label text="Código" required="true" />
+                    <Input id="codigo" valueStateText="El artículo debe tener un código."
+                        valueLiveUpdate="true"
+                        value="{ 
+                            path: '/codigo',
+                            type: 'sap.ui.model.type.String',
+                            constraints: {
+                                minLength: 1,
+                                maxLength: 256
+                                }
+                            }"/>
+                    <Label text="Descripción" required="true" />
+                    <Input id="descripcion" 
+                        valueStateText="El artículo debe tener una descripción"
+                        valueLiveUpdate="true"
+                        value="{ 
+                            path: '/descripcion',
+                            type: 'sap.ui.model.type.String',
+                                constraints: {
+                                    minLength: 1
+                                    }                        
+                            }"/>
                     <Label text="IVA" />
                     <Select forceSelection="false" selectedKey="{/iva_tipo}">
                         <core:Item key="G" text="Gravado" />
@@ -28,9 +46,9 @@
                     <Input id="coeficiente_ganancia_2" value="{/coeficiente_ganancia_2}" />
                     <Text text="Precio Mayorista: {= (${/costo} * ${/coeficiente_ganancia_2}).toFixed(2)}"/>
                     <Label text="Stock actual"/>
-                    <Input id="stock_actual"/>
+                    <Input id="stock_actual" value="{/stock_actual}" />
                     <Label text="Marca / Categoría"/>
-                        <Input id="id_marca" type="Text" submit="handleSuggest" selectedKey="{/id_marca}" placeholder="Ingrese una marca..." showSuggestion="true" suggestionItems="{marcas>/}">
+                        <Input id="id_marca" type="Text" submit="handleSuggest" liveChange="searchMarcaSuggest" valueLiveUpdate="true" selectedKey="{/id_marca}" placeholder="Ingrese una marca..." showSuggestion="true" suggestionItems="{marcas>/}">
                             <suggestionItems>
                                 <core:Item text="{marcas>marca}" key="{marcas>id_marca}" />
                             </suggestionItems>
