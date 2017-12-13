@@ -114,7 +114,7 @@ sap.ui.define(["sap/ui/core/Renderer", "./ObjectPageHeaderRenderer"],
 			}
 			oRm.writeClasses();
 			oRm.write(">");
-			aSections = oControl.getAggregation("sections");
+			aSections = oControl._getSectionsToRender();
 			if (jQuery.isArray(aSections)) {
 				jQuery.each(aSections, function (iIndex, oSection) {
 					oRm.renderControl(oSection);
@@ -245,9 +245,14 @@ sap.ui.define(["sap/ui/core/Renderer", "./ObjectPageHeaderRenderer"],
 		 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
 		 */
 		ObjectPageLayoutRenderer._rerenderHeaderContentArea = function (oRm, oControl) {
-			var sHeaderContentDOMId = oControl._bHContentAlwaysExpanded ? "stickyHeaderContent" : "headerContent";
+			var sHeaderContentDOMId = oControl._bHContentAlwaysExpanded ? "stickyHeaderContent" : "headerContent",
+			$headerContent;
+
 			this.renderHeaderContent(oRm, oControl);
-			oRm.flush(oControl.$(sHeaderContentDOMId)[0]);
+			$headerContent = oControl.$(sHeaderContentDOMId)[0];
+			if ($headerContent) {
+				oRm.flush($headerContent);
+			}
 		};
 
 

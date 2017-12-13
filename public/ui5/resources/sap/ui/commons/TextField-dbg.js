@@ -16,12 +16,12 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	 * @param {object} [mSettings] Initial settings for the new control
 	 *
 	 * @class
-	 * Renders a input field for text input.
+	 * Renders an input field for text input.
 	 * @extends sap.ui.core.Control
-	 * @implements sap.ui.commons.ToolbarItem
+	 * @implements sap.ui.commons.ToolbarItem, sap.ui.core.IFormContent
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -32,7 +32,8 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	var TextField = Control.extend("sap.ui.commons.TextField", /** @lends sap.ui.commons.TextField.prototype */ { metadata : {
 
 		interfaces : [
-			"sap.ui.commons.ToolbarItem"
+			"sap.ui.commons.ToolbarItem",
+			"sap.ui.core.IFormContent"
 		],
 		library : "sap.ui.commons",
 		properties : {
@@ -444,6 +445,23 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 		this._fireLiveChange(oEvent);
 
 	};
+
+	if (sap.ui.Device.browser.internet_explorer) {
+		//In IE pasting of strings with line endings cutoffs the text after the 1st line ending, so make sure line endings are removed
+		TextField.prototype.onpaste = function(oEvent) {
+			var clipboardData,
+				pastedData,
+				modifiedData;
+
+			clipboardData = oEvent.clipboardData || window.clipboardData;
+			pastedData = clipboardData.getData('Text');
+
+			if (pastedData) {
+				modifiedData = pastedData.replace(/(?:\r\n|\r|\n)/g, ' ').replace(/\s+$/, "");
+				clipboardData.setData("Text", modifiedData);
+			}
+		};
+	}
 
 	TextField.prototype._realOninput = function(oEvent) {
 

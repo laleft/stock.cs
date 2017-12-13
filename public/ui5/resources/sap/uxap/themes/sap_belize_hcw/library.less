@@ -25,6 +25,13 @@
 	border-bottom: none;
 }
 
+/* L fullscreen paddings */
+html.sapUiMedia-Std-Desktop .sapUxAPAnchorBar.sapMTB,
+html.sapUiMedia-Std-Desktop .sapMSplitContainer.sapMSplitContainerHideMode .sapMSplitContainerDetail .sapUxAPAnchorBar.sapMTB /* overriding selector for desktop in split-container */
+{
+	padding-left: 2rem;
+}
+
 .sapUxAPAnchorBar .sapUxAPAnchorBarButton,
 .sapUxAPAnchorBar .sapUxAPAnchorBarButton .sapMBtnInner {
 	padding-top: 0;
@@ -457,7 +464,7 @@ html.sapUiMedia-Std-Desktop, html.sapUiMedia-Std-Tablet {
 
 .sapUxAPObjectPageFooter .sapUxAPObjectPageFloatingFooter {
 	border: 1px solid @sapUiGroupTitleBorderColor;
-	box-shadow: @sapUiShadowLevel3;
+	box-shadow: @sapUiShadowLevel2;
 }
 /* END "ObjectPageLayout.less" */
 
@@ -489,6 +496,14 @@ html.sapUiMedia-Std-Desktop, html.sapUiMedia-Std-Tablet {
 .sapUiSizeCompact .sapUxAPObjectPageSectionTitle {
 	line-height: 2.4rem;
 }
+
+/* IE and Edge ignores outline-offset. Use an overlay: */
+html[data-sap-ui-browser^="ie"].sap-desktop,
+html[data-sap-ui-browser^="ed"].sap-desktop {
+	.sapUxAPObjectPageSection:focus:before {
+		border-width: 0.125rem;
+	}
+}
 /* END "ObjectPageSection.less" */
 
 /* START "ObjectPageSubSection.less" */
@@ -497,17 +512,17 @@ html.sapUiMedia-Std-Desktop, html.sapUiMedia-Std-Tablet {
 /* Belize High Contrast White theme               */
 /* ============================================== */
 
-.sapUxAPObjectPageSubSection:focus,
-.sapUxAPObjectPageSubSectionHeaderTitle:focus {
+.sapUxAPObjectPageSubSection:focus {
 	outline: 0.125rem dotted @sapUiContentFocusColor;
 	outline-offset: -0.125rem;
 	border-color: transparent;
 	border-radius: 0;
 }
 
-/* IE ignores outline-offset. Use an overlay: */
-html[data-sap-ui-browser^="ie"] .sapUxAPObjectPageSubSection, .sapUxAPObjectPageSubSectionHeaderTitle {
-	&:focus:before {
+/* IE and Edge ignores outline-offset. Use an overlay: */
+html[data-sap-ui-browser^="ie"].sap-desktop,
+html[data-sap-ui-browser^="ed"].sap-desktop {
+	.sapUxAPObjectPageSubSection:focus:before {
 		border-width: 0.125rem;
 	}
 }

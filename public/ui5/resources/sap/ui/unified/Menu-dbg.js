@@ -24,7 +24,7 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/Device', 'sap
 	 * @implements sap.ui.core.IContextMenu
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 * @since 1.21.0
 	 *
 	 * @constructor
@@ -319,6 +319,8 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/Device', 'sap
 		this.getPopup().open(0, my, at, of, offset || "0 0", collision || "_sapUiCommonsMenuFlip _sapUiCommonsMenuFlip", true);
 		this.bOpen = true;
 
+		Device.resize.attachHandler(this._handleResizeChange, this);
+
 		// Set the tab index of the menu and focus
 		var oDomRef = this.getDomRef();
 		jQuery(oDomRef).attr("tabIndex", 0).focus();
@@ -335,15 +337,24 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/Device', 'sap
 		}
 	};
 
+	Menu.prototype._handleResizeChange = function() {
+		this.getPopup()._applyPosition(this.getPopup()._oLastPosition);
+	};
+
 	/**
 	 * Opens the menu as a context menu.
 	 */
 	Menu.prototype.openAsContextMenu = function(oEvent, oOpenerRef) {
 		var x = oEvent.pageX - jQuery(oOpenerRef.getDomRef()).offset().left,
 			y = oEvent.pageY - jQuery(oOpenerRef.getDomRef()).offset().top,
+			bRTL = sap.ui.getCore().getConfiguration().getRTL(),
 			eDock = sap.ui.core.Popup.Dock;
 
-		this.open(true, oOpenerRef, eDock.BeginTop, eDock.BeginTop, oOpenerRef, x + " " + y, 'flip');
+		if (bRTL) {
+			x = oOpenerRef.getDomRef().clientWidth - x;
+		}
+
+		this.open(true, oOpenerRef, eDock.BeginTop, eDock.BeginTop, oOpenerRef,  x + " " + y, 'flip');
 	};
 
 	/**
@@ -383,6 +394,8 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/Device', 'sap
 
 		// Close the sap.ui.core.Popup
 		this.getPopup().close(0);
+
+		Device.resize.detachHandler(this._handleResizeChange, this);
 
 		//Remove the Menus DOM after it is closed
 		this._resetDelayedRerenderItems();

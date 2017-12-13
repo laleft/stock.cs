@@ -20,7 +20,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/unified/FileUploaderPar
 	 * @extends sap.ui.unified.FileUploaderParameter
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public

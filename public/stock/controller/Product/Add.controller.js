@@ -27,15 +27,17 @@ sap.ui.define([
 
             this.getView().setModel(this._data);
 
+            this.getView().byId('codigo').focus();
+
             // var _oMarcas = new JSONModel();
             // _oMarcas.setSizeLimit(2000);
-            // _oMarcas.loadData('http://nsstock.app/api/marca');
+            // _oMarcas.loadData('http://nsstock.dev/api/marca');
 
             // this.getView().setModel(_oMarcas, "marcas");
 
             var _oCategorias = new JSONModel();
             _oCategorias.setSizeLimit(2000);
-            _oCategorias.loadData('http://nsstock.app/api/categoria');
+            _oCategorias.loadData('http://nsstock.dev/api/categoria');
 
             this.getView().setModel(_oCategorias, "categorias");
 
@@ -49,7 +51,7 @@ sap.ui.define([
             if (oEvent.getSource().getValue().length > 2) {
                 var _oMarcas = new JSONModel();
                 _oMarcas.setSizeLimit(2000);
-                _oMarcas.loadData('http://nsstock.app/api/marca');
+                _oMarcas.loadData('http://nsstock.dev/api/marca');
                 this.getView().setModel(_oMarcas, "marcas");
             }
         },
@@ -60,7 +62,7 @@ sap.ui.define([
 
             _oModel.attachRequestCompleted(function () {
 
-                _oModel.loadData('http://nsstock.app/api/categoria', { 'id_marca': id_marca });
+                _oModel.loadData('http://nsstock.dev/api/categoria', { 'id_marca': id_marca });
 
             });
 
@@ -73,7 +75,7 @@ sap.ui.define([
 
             if (_id_marca) {
                 var _oModel = new JSONModel();
-                _oModel.loadData('http://nsstock.app/api/categoria', { 'id_marca': _id_marca });
+                _oModel.loadData('http://nsstock.dev/api/categoria', { 'id_marca': _id_marca });
                 _oModel.attachRequestCompleted(function () {
                     this._data.setProperty('/id_categoria', _oModel.getProperty('/id_categoria'));
                     //this.getView().byId('id_categoria').setValue(_oModel.getProperty('/categoria'));
@@ -120,7 +122,7 @@ sap.ui.define([
     
                 var _oModel = new JSONModel();
                 var _parameters = this._data.getJSON();
-                _oModel.loadData('http://nsstock.app/api/articulo/create', JSON.parse(_parameters));
+                _oModel.loadData('http://nsstock.dev/api/articulo/create', JSON.parse(_parameters));
             }
 
         }

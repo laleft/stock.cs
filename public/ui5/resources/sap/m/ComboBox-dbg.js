@@ -45,7 +45,7 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 		 * </ul>
 		 *
 		 * @author SAP SE
-		 * @version 1.46.7
+		 * @version 1.48.13
 		 *
 		 * @constructor
 		 * @extends sap.m.ComboBoxBase
@@ -292,6 +292,72 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 		};
 
 		/**
+		 * Handles highlighting of items after filtering.
+		 *
+		 * @param {string} sValue
+		 * @private
+		 * @since 1.48
+		 */
+		ComboBox.prototype._highlightList = function(sValue) {
+			var aItems = this.getVisibleItems(),
+				iInitialValueLength = sValue.length,
+				sValue = sValue.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'),
+				oRegex = new RegExp("^" + sValue, "i");
+
+			aItems.forEach(function (oItem) {
+				var oItemDomRef = oItem.getDomRef(),
+					oItemAdditionalTextRef, oItemTextRef;
+
+				// when loadItems is used the items are not rendered but picker is opened
+				if (oItemDomRef === null) {
+					return;
+				}
+				oItemAdditionalTextRef = oItemDomRef.children[1];
+				oItemTextRef = Array.prototype.filter.call(oItemDomRef.children, function(oChildRef) {
+					return oChildRef.tagName.toLowerCase() !== "b";
+				})[0] || oItemDomRef;
+
+				oItemTextRef.innerHTML = this._boldItemRef(oItem.getText(), oRegex, iInitialValueLength);
+
+				if (oItemAdditionalTextRef && oItem.getAdditionalText) {
+					oItemAdditionalTextRef.innerHTML = this._boldItemRef(oItem.getAdditionalText(), oRegex, iInitialValueLength);
+				}
+			}, this);
+		};
+
+		/**
+		 * Handles bolding of innerHTML of items.
+		 *
+		 * @param {string} sItemText The item text
+		 * @param {RegExp} oRegex A regEx to split the item
+		 * @param {string} iInitialValueLength The characters length of the value of the item
+		 *
+		 * @returns {string}
+		 * @private
+		 * @since 1.48
+		 */
+		ComboBox.prototype._boldItemRef = function (sItemText, oRegex, iInitialValueLength) {
+			var sResult;
+
+			var sTextReplacement = "<b>" + jQuery.sap.encodeHTML(sItemText.slice(0, iInitialValueLength)) + "</b>";
+
+			// parts should always be max of two because regex is not defined as global
+			// see above method
+			var aParts = sItemText.split(oRegex);
+
+			if (aParts.length === 1) {
+				// no match found, return value as it is
+				sResult = jQuery.sap.encodeHTML(sItemText);
+			} else {
+				sResult = aParts.map(function (sPart) {
+					return jQuery.sap.encodeHTML(sPart);
+				}).join(sTextReplacement);
+			}
+
+			return sResult;
+		};
+
+		/**
 		 * Sets the selected item by its index.
 		 *
 		 * @param {int} iIndex
@@ -319,22 +385,14 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 		 */
 		ComboBox.prototype.createDropdown = function() {
 			var that = this;
-			var oPicker = new Popover({
-				placement: sap.m.PlacementType.VerticalPreferredBottom,
-				offsetX: 0,
-				offsetY: 0,
-				bounce: false,
-				showArrow: false,
-				ariaLabelledBy: this.getPickerInvisibleTextId() || undefined
-			});
+			var oDropdown = new Popover(this.getDropdownSettings());
+			oDropdown.setInitialFocus(this);
 
-			oPicker.setInitialFocus(this.isPlatformTablet() ? oPicker : this);
-
-			oPicker.open = function() {
+			oDropdown.open = function() {
 				return this.openBy(that);
 			};
 
-			return oPicker;
+			return oDropdown;
 		};
 
 		/**
@@ -433,6 +491,9 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 			this.bOpenValueStateMessage = true;
 			this._sValueBeforeOpen = "";
 
+			// stores the value of the input before opening the picker
+			this._sInputValueBeforeOpen = "";
+
 			// the last selected item before opening the picker
 			this._oSelectedItemBeforeOpen = null;
 
@@ -499,6 +560,8 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 			var oList = this.getList(),
 				oFocusDomRef = this.getFocusDomRef();
 
+			this._highlightList(this._sInputValueBeforeOpen);
+
 			if (oList) {
 				oList.setBusy(false);
 			}
@@ -548,26 +611,27 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 				var oFirstVisibleItem = aVisibleItems[0]; // first item that matches the value
 				var bTextMatched = (oFirstVisibleItem && jQuery.sap.startsWithIgnoreCase(oFirstVisibleItem.getText(), sValue));
 				var bSearchBoth = this.getFilterSecondaryValues();
+				var bDesktopPlatform = sap.ui.Device.system.desktop;
 
 				if (!bEmptyValue && oFirstVisibleItem && oFirstVisibleItem.getEnabled()) {
 
 					if (oControl._bDoTypeAhead) {
 
 						if (bSearchBoth && this._oFirstItemTextMatched) {
-							oControl.updateDomValue(this._oFirstItemTextMatched.getText() + " (" + this._oFirstItemTextMatched.getAdditionalText() + ")");
+							oControl.updateDomValue(this._oFirstItemTextMatched.getText());
 							this.setSelection(this._oFirstItemTextMatched);
 						} else if (bSearchBoth) {
+
 							if (bTextMatched) {
-								oControl.updateDomValue(oFirstVisibleItem.getText() + " (" + oFirstVisibleItem.getAdditionalText() + ")");
+								oControl.updateDomValue(oFirstVisibleItem.getText());
 							} else {
-								oControl.updateDomValue(oFirstVisibleItem.getAdditionalText() + " (" + oFirstVisibleItem.getText() + ")");
+								oControl.updateDomValue(oFirstVisibleItem.getAdditionalText());
 							}
 							this.setSelection(oFirstVisibleItem);
 						} else {
 							oControl.updateDomValue(oFirstVisibleItem.getText());
 							this.setSelection(oFirstVisibleItem);
 						}
-
 					}
 
 					if (oSelectedItem !== this.getSelectedItem()) {
@@ -578,12 +642,17 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 
 					if (oControl._bDoTypeAhead) {
 
-						// timeout required for an Android and Windows Phone bug
-						setTimeout(fnSelectTextIfFocused.bind(oControl, sValue.length, oControl.getValue().length), 0);
+						if (bDesktopPlatform) {
+							fnSelectTextIfFocused.call(oControl, sValue.length, oControl.getValue().length);
+						} else {
+							// timeout required for an Android and Windows Phone bug
+							setTimeout(fnSelectTextIfFocused.bind(oControl, sValue.length, oControl.getValue().length), 0);
+						}
 					}
 				}
 
-				if (bEmptyValue || !bItemsVisible) {
+				if (bEmptyValue || !bItemsVisible ||
+					(!oControl._bDoTypeAhead && (this._getSelectedItemText() !== sValue))) {
 					this.setSelection(null);
 
 					if (oSelectedItem !== this.getSelectedItem()) {
@@ -591,6 +660,12 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 							selectedItem: this.getSelectedItem()
 						});
 					}
+				}
+
+				this._sInputValueBeforeOpen = sValue;
+
+				if (this.isOpen()) {
+					this._highlightList(sValue);
 				}
 
 				if (bItemsVisible) {
@@ -644,8 +719,9 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 		 */
 		ComboBox.prototype.onItemPress = function(oControlEvent) {
 			var oItem = oControlEvent.getParameter("item");
+			var sText = oItem.getText();
 
-			this.updateDomValue(oItem.getText());
+			this.updateDomValue(sText);
 
 			this.close();
 
@@ -764,6 +840,8 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 			// notice that to prevent flickering, the filter is cleared
 			// after the close animation is completed
 			this.clearFilter();
+
+			this._sInputValueBeforeOpen = "";
 
 			// if the focus is back to the input after closing the picker,
 			// the value state message should be reopen
@@ -1032,6 +1110,41 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 				fnHandleKeyboardNavigation.call(this, oControl, oItem);
 			});
 		};
+
+		/**
+		 * Handles the <code>onsapshow</code> event when either F4 is pressed or Alt + Down arrow are pressed.
+		 *
+		 * @param {jQuery.Event} oEvent The event object.
+		 */
+		ComboBox.prototype.onsapshow = function(oEvent) {
+			var aSelectableItems, oItem;
+			ComboBoxBase.prototype.onsapshow.apply(this, arguments);
+
+			if (!this.getValue()) {
+				aSelectableItems = this.getSelectableItems();
+				oItem = aSelectableItems[0];
+
+				if (oItem) {
+					this.setSelection(oItem);
+					this.updateDomValue(oItem.getText());
+
+					this.fireSelectionChange({
+						selectedItem: oItem
+					});
+
+					setTimeout(function() {
+						this.selectText(0, oItem.getText().length);
+					}.bind(this), 0);
+				}
+			}
+		};
+
+		/**
+		 * Handles when Alt + Up arrow are pressed.
+		 *
+		 * @param {jQuery.Event} oEvent The event object.
+		 */
+		ComboBox.prototype.onsaphide = ComboBox.prototype.onsapshow;
 
 		/**
 		 * Handles the <code>focusin</code> event.
@@ -1535,11 +1648,21 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 		 */
 		ComboBox.prototype.setSelectedKey = function(sKey) {
 			sKey = this.validateProperty("selectedKey", sKey);
-			var bDefaultKey = (sKey === "");
+			var bDefaultKey = (sKey === ""),
+				// the correct solution for tackling the coupling of selectedKey and value should be by using debounce
+				// however this makes the API async, which alters the existing behaviour of the control
+				// that's why the solution is implemented with skipModelUpdate property
+				bSkipModelUpdate = this.isBound("selectedKey") && this.isBound("value") && this.getBindingInfo("selectedKey").skipModelUpdate;
 
 			if (bDefaultKey) {
 				this.setSelection(null);
-				this.setValue("");
+
+				// if the setSelectedKey in called from ManagedObject's updateProperty
+				// on model change the value property should not be changed
+				if (!bSkipModelUpdate) {
+					this.setValue("");
+				}
+
 				return this;
 			}
 
@@ -1547,7 +1670,13 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 
 			if (oItem) {
 				this.setSelection(oItem);
-				this.setValue(this._getSelectedItemText(oItem));
+
+				// if the setSelectedKey in called from ManagedObject's updateProperty
+				// on model change the value property should not be changed
+				if (!bSkipModelUpdate) {
+					this.setValue(this._getSelectedItemText(oItem));
+				}
+
 				return this;
 			}
 
@@ -1565,6 +1694,47 @@ sap.ui.define(['jquery.sap.global', './ComboBoxTextField', './ComboBoxBase', './
 		ComboBox.prototype.getSelectedItem = function() {
 			var vSelectedItem = this.getAssociation("selectedItem");
 			return (vSelectedItem === null) ? null : sap.ui.getCore().byId(vSelectedItem) || null;
+		};
+
+		ComboBox.prototype.updateItems = function () {
+			var vResult,
+				oSelectedItem = this.getSelectedItem(), //Get selected item before model update
+				vResult = ComboBoxBase.prototype.updateItems.apply(this, arguments); //Update
+
+			//Debounce & emulate onBeforeRendering- all setters are done
+			jQuery.sap.clearDelayedCall(this._debounceItemsUpdate);
+			this._debounceItemsUpdate = jQuery.sap.delayedCall(0, this, "_syncItemsSelection", [oSelectedItem]);
+
+			return vResult;
+		};
+
+		/**
+		 * Synchronizes combobox's model update with selected key.
+		 *
+		 * @param sSelectedKey
+		 * @param oSelectedItem
+		 * @private
+		 */
+		ComboBox.prototype._syncItemsSelection = function (oSelectedItem) {
+			var bHasMatchingElement, aNewItems,
+				sSelectedKey  = this.getSelectedKey();
+
+			// The method should be executed only when there's previous selection
+			// and that previous selection differs from the current one.
+			if (!oSelectedItem || oSelectedItem === this.getSelectedItem()) {
+				return;
+			}
+
+			// Get the items after model update
+			aNewItems = this.getItems();
+
+			// Find out if there's an item with the same key, to select it
+			bHasMatchingElement = aNewItems.some(function (oItem) {
+				return sSelectedKey === oItem.getKey();
+			});
+
+			// Select the item or set null if there's no record with that key
+			this.setSelectedItem(bHasMatchingElement && sSelectedKey ? this.getItemByKey(sSelectedKey) : null);
 		};
 
 		/**

@@ -82,8 +82,6 @@
 		/* set href only if link is enabled - BCP incident 1570020625 */
 		if (oControl.getHref() && oControl.getEnabled()) {
 			oRm.writeAttributeEscaped("href", oControl.getHref());
-		} else {
-			oRm.writeAttribute("href", "#");
 		}
 
 		if (oControl.getTarget()) {
@@ -110,7 +108,11 @@
 		oRm.writeStyles();
 		oRm.write(">"); // opening <a> tag
 
-		this.renderText(oRm, oControl);
+		if (this.writeText) {
+			this.writeText(oRm, oControl);
+		} else {
+			this.renderText(oRm, oControl);
+		}
 
 		oRm.write("</a>");
 	};

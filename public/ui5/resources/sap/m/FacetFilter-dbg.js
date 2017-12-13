@@ -5,8 +5,8 @@
 */
 
 // Provides control sap.m.FacetFilter.
-sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/Control', 'sap/ui/core/IconPool', 'sap/ui/core/delegate/ItemNavigation'],
-	function(jQuery, NavContainer, library, Control, IconPool, ItemNavigation) {
+sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/Control', 'sap/ui/core/IconPool', 'sap/ui/core/delegate/ItemNavigation', 'sap/ui/core/InvisibleText'],
+	function(jQuery, NavContainer, library, Control, IconPool, ItemNavigation, InvisibleText) {
 	"use strict";
 
 
@@ -75,7 +75,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 	 *
 	 * @extends sap.ui.core.Control
 	 * @implements sap.ui.core.IShrinkable
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -100,7 +100,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 			type : {type : "sap.m.FacetFilterType", group : "Appearance", defaultValue : sap.m.FacetFilterType.Simple},
 
 			/**
-			 * Enables/disables live search on all search fields except for the FacetFilterList search.
+			 * Enables/disables live search in the search field of all <code>sap.m.FacetFilterList</code> instances.
 			 */
 			liveSearch : {type : "boolean", group : "Behavior", defaultValue : true},
 
@@ -190,7 +190,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 	// How many pixels to scroll with every overflow arrow click
 	FacetFilter.SCROLL_STEP = 264;
 
-	/**
+	/*
 	 * Loads the appropriate type of FacetFilter according to device.
 	 * @param {object} oType Type of FacetFilter to render depending on device
 	 * @returns {sap.m.FacetFilter} this for chaining
@@ -221,7 +221,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 		return this;
 	};
 
-	/**
+	/*
 	 * Sets whether or not to display Reset button to reset values.
 	 * @param {boolean} bVal Boolean to set Reset button to true or false
 	 * @returns {sap.m.FacetFilter} this for chaining
@@ -247,7 +247,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 		return this;
 	};
 
-	/**
+	/*
 	 * Sets whether or not to display summary bar.
 	 * @param {boolean} bVal Boolean to set summary bar to <code>true</code> or <code>false</code>
 	 * @returns {sap.m.FacetFilter} this for chaining
@@ -272,7 +272,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 		return this;
 	};
 
-	/**
+	/*
 	 * Sets whether or not to display live search bar.
 	 * @param {boolean} bVal Boolean to set live search bar to <code>true</code> or <code>false</code>
 	 */
@@ -298,7 +298,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 		return this;
 	};
 
-	/**
+	/*
 	 * Gets the FacetFilterLists necessary to load.
 	 * @returns {sap.m.FacetFilterList} List that is specified.
 	 */
@@ -317,7 +317,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 		return aLists;
 	};
 
-	/**
+	/*
 	 * Removes the specified FacetFilterList by cleaning up facet buttons.
 	 * Removes facet icons for the given FacetFilterList.
 	 * @param {object} vObject List that is to be removed
@@ -392,6 +392,8 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 		// to find a button for a list.
 		this._buttons = {};
 
+		this._aOwnedLabels = [];
+
 		// Remove icon map used to quickly get the remove icon for a given list. This avoids having to iterate through the removeIcon aggregation
 		// to find an icon for a list.
 		this._removeFacetIcons = {};
@@ -430,12 +432,22 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 	 * @private
 	 */
 	FacetFilter.prototype.exit = function() {
-
+		var oCtrl;
 		sap.ui.getCore().detachIntervalTimer(this._checkOverflow, this);
 
 		if (this.oItemNavigation) {
 			this.removeDelegate(this.oItemNavigation);
 			this.oItemNavigation.destroy();
+		}
+
+		if (this._aOwnedLabels) {
+			this._aOwnedLabels.forEach(function (sId) {
+				oCtrl = sap.ui.getCore().byId(sId);
+				if (oCtrl) {
+					oCtrl.destroy();
+				}
+			});
+			this._aOwnedLabels = null;
 		}
 	};
 
@@ -462,7 +474,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 	FacetFilter.prototype.onAfterRendering = function() {
 
 		if (this.getType() !== sap.m.FacetFilterType.Light && !sap.ui.Device.system.phone) {
-			// Attach a interval timer that periodically checks overflow of the "head" div in the event that the window is resized or the device orientation is changed. This is ultimately to
+			// Attach an interval timer that periodically checks overflow of the "head" div in the event that the window is resized or the device orientation is changed. This is ultimately to
 			// see if carousel arrows should be displayed.
 			sap.ui.getCore().attachIntervalTimer(this._checkOverflow, this); // proxy() is needed for the additional parameters, not for "this"
 		}
@@ -537,7 +549,7 @@ sap.ui.define(['jquery.sap.global', './NavContainer', './library', 'sap/ui/core/
 		}
 
 		oButton = sap.ui.getCore().byId(oEvent.target.id);
-		if (!oButton) { //not an UI5 object
+		if (!oButton) { //not a UI5 object
 			return;
 		}
 
@@ -1491,7 +1503,6 @@ oPopover.setContentWidth("30%");
 				path: "/items",
 				template: new sap.m.StandardListItem({
 					title: "{text}",
-			    tooltip:"{text}",
 					counter: "{count}",
 					type: sap.m.ListType.Navigation,
 					customData : [ new sap.ui.core.CustomData({
@@ -1509,7 +1520,6 @@ oPopover.setContentWidth("30%");
 
 			aFacetFilterLists.push({
 				text: oList.getTitle(),
-				tooltip:oList.getTitle(),
 				count: oList.getAllCount(),
 				index : i
 			});
@@ -1769,6 +1779,14 @@ oPopover.setContentWidth("30%");
 				}
 			});
 
+			var sFacetFilterText = sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("FACETFILTER_ARIA_FACET_FILTER"),
+				sInvisibleLabelId = new InvisibleText({text: sFacetFilterText}).toStatic().getId();
+
+			this._aOwnedLabels.push(sInvisibleLabelId);
+
+			oSummaryBar._setRootAccessibilityRole("button");
+			oSummaryBar._sInternalAriaLabelId = sInvisibleLabelId;
+
 			this.setAggregation("summaryBar", oSummaryBar);
 		}
 		return oSummaryBar;
@@ -1906,6 +1924,7 @@ oPopover.setContentWidth("30%");
 			oSummaryBar.addContent(new sap.m.ToolbarSpacer({width: ""})); // Push the reset button to the end of the toolbar
 			var oButton = this._createResetButton();
 			oSummaryBar.addContent(oButton);
+			oButton.addStyleClass("sapUiSizeCompact");
 			oButton.addStyleClass("sapMFFRefresh");
 			oButton.addStyleClass("sapMFFBtnHoverable");
 		}
@@ -2102,6 +2121,12 @@ oPopover.setContentWidth("30%");
 
 		var that = this;
 		var fnTouchStart = function(evt) {
+			var sType = that.getType();
+
+			// If FacetFilter type is Light do nothing on touch start (we do not have header to be scrolled)
+			if (sType === sap.m.FacetFilterType.Light) {
+				return;
+			}
 
 			evt.preventDefault();
 
@@ -2117,6 +2142,12 @@ oPopover.setContentWidth("30%");
 		};
 
 		var fnTouchMove = function(evt) {
+			var sType = that.getType();
+
+			// If FacetFilter type is Light do nothing on touch move (we do not have header to be scrolled)
+			if (sType === sap.m.FacetFilterType.Light) {
+				return;
+			}
 
 			var dx = evt.touches[0].pageX - that.startTouchX;
 
@@ -2137,6 +2168,12 @@ oPopover.setContentWidth("30%");
 		};
 
 		var fnTouchEnd = function(evt) {
+			var sType = that.getType();
+
+			// If FacetFilter type is Light do nothing on touch end (we do not have header to be scrolled)
+			if (sType === sap.m.FacetFilterType.Light) {
+				return;
+			}
 
 			if (that._bTouchNotMoved === false) { // swiping ends now
 				evt.preventDefault();

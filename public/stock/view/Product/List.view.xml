@@ -31,14 +31,6 @@
 							showValueHelp="true" 
 							valueHelpOnly="true" 
 							valueHelpRequest="handleSelectMarcaDialogPress" />
-						<SearchField id="maxPrice" liveChange="onFilter">
-							<layoutData>
-								<OverflowToolbarLayoutData minWidth="200px" maxWidth="300px" shrinkable="true"/>
-							</layoutData>
-						</SearchField>
-						<Button text="Reset" type="Transparent" press="onReset"/>
-						<OverflowToolbarButton type="Transparent" text="Sort" icon="sap-icon://sort" press="onSort"/>
-						<OverflowToolbarButton type="Transparent" text="Group" icon="sap-icon://group-2" press="onGroup"/>
 					</OverflowToolbar>
 				</headerToolbar>
 				<columns>
@@ -59,8 +51,8 @@
 					<ColumnListItem>
 						<cells>
 							<ObjectIdentifier title="{descripcion}" text="{codigo}" />
-							<Text text="{marca}" />
 							<Text text="{categoria}" />
+							<Text text="{marca}" />
 							<Text text="{stock_actual}" />
 						</cells>
 					</ColumnListItem>

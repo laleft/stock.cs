@@ -167,6 +167,7 @@ html[dir=rtl][data-sap-ui-browser^=ed] .sapUiFormResLayout .sapUiRFLRow:first-ch
 	font-size: @sapMFontMediumSize;
 	font-family: @sapUiFontFamily;
 	color: contrast(@sapUiInfobarBackground, @sapUiListActiveTextColor, @sapUiListTextColor, @sapUiContentContrastTextThreshold);
+	padding-right: 0.125rem; /* prevents truncation of the last letter */
 }
 
 .sapMTB-Info-CTX .sapMLabel.sapMLabelTBHeader {
@@ -182,6 +183,11 @@ html[dir=rtl] .sapMTB-Info-CTX .sapMLabel {
 	font-weight: @sapUiFontHeaderWeight;
 	font-family: @sapUiFontHeaderFamily;
 	color: @sapUiGroupTitleTextColor;
+}
+
+/* HorizontalLayout */
+.sapUiHLayoutChildWrapper > .sapMLabel {
+	vertical-align: text-bottom;
 }
 
 /* ================================ */
@@ -244,6 +250,7 @@ html[dir=rtl][data-sap-ui-browser^=ed] .sapUiRespGridMedia-Std-LargeDesktop.sapU
 	.sapUiTableTd {
 		:not(.sapMRbBLabel):not(.sapMCbLabel) .sapMLabel {
 			line-height: 1.5rem;
+			vertical-align: middle;
 		}
 	}
 }

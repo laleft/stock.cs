@@ -20,7 +20,7 @@ Route::get('articulo/ultimos', 'ArticuloController@ultimos');
 Route::get('articulo/filtrar', 'ArticuloController@filtrar');
 Route::get('articulo/buscar/{articulo?}', 'ArticuloController@buscar');
 Route::get('categoria/listar/{categoria?}/{pagesize?}', 'CategoriaController@listar');
-Route::resource('articulo', 'ArticuloController');
+Route::resource('articulo', 'ApiControllers\ArticuloController');
 Route::resource('marca', 'MarcaController');
 Route::resource('categoria', 'CategoriaController', ['only' => [
     'index'

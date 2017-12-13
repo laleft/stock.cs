@@ -18,7 +18,7 @@ sap.ui.define(['jquery.sap.global', './Table', 'sap/ui/model/odata/ODataTreeBind
 	 * @class
 	 * The TreeTable control provides a comprehensive set of features to display hierarchical data.
 	 * @extends sap.ui.table.Table
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -143,6 +143,25 @@ sap.ui.define(['jquery.sap.global', './Table', 'sap/ui/model/odata/ODataTreeBind
 	};
 
 	/**
+	 * This function will be called by either by {@link sap.ui.base.ManagedObject#bindAggregation} or {@link sap.ui.base.ManagedObject#setModel}.
+	 *
+	 * @override {@link sap.ui.table.Table#_bindAggregation}
+	 */
+	TreeTable.prototype._bindAggregation = function(sName, oBindingInfo) {
+		// Create the binding.
+		Table.prototype._bindAggregation.call(this, sName, oBindingInfo);
+
+		var oBinding = this.getBinding("rows");
+
+		if (sName === "rows" && oBinding != null) {
+			// Table._addBindingListener can not be used here, as the selectionChanged event will be added by an adapter applied in #getBinding.
+			oBinding.attachEvents({
+				selectionChanged: this._onSelectionChanged.bind(this)
+			});
+		}
+	};
+
+	/**
 	 * Sets the selection mode. The current selection is lost.
 	 * @param {string} sSelectionMode the selection mode, see sap.ui.table.SelectionMode
 	 * @public
@@ -160,18 +179,6 @@ sap.ui.define(['jquery.sap.global', './Table', 'sap/ui/model/odata/ODataTreeBind
 			Table.prototype.setSelectionMode.call(this, sSelectionMode);
 		}
 		return this;
-	};
-
-	/**
-	 * refresh rows
-	 * @private
-	 */
-	TreeTable.prototype.refreshRows = function(sReason) {
-		Table.prototype.refreshRows.apply(this, arguments);
-		var oBinding = this.getBinding("rows");
-		if (oBinding && this.isTreeBinding("rows") && !oBinding.hasListeners("selectionChanged")) {
-			oBinding.attachSelectionChanged(this._onSelectionChanged, this);
-		}
 	};
 
 	/**
@@ -511,21 +518,13 @@ sap.ui.define(['jquery.sap.global', './Table', 'sap/ui/model/odata/ODataTreeBind
 	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	TreeTable.prototype.selectAll = function () {
-		//select all is only allowed when SelectionMode is "Multi" or "MultiToggle"
-		var oSelMode = this.getSelectionMode();
-		if (!this.getEnableSelectAll() || (oSelMode != "Multi" && oSelMode != "MultiToggle") || !this._getSelectableRowCount()) {
+		if (!TableUtils.hasSelectAll(this)) {
 			return this;
 		}
 
 		//The OData TBA exposes a selectAll function
 		var oBinding = this.getBinding("rows");
-		if (oBinding.selectAll) {
-			var $SelAll = this.$("selall");
-			$SelAll.removeClass("sapUiTableSelAll");
-			if (this._getShowStandardTooltips()) {
-				$SelAll.attr('title', this._oResBundle.getText("TBL_DESELECT_ALL"));
-			}
-			this._getAccExtension().setSelectAllState(true);
+		if (oBinding && oBinding.selectAll) {
 			oBinding.selectAll();
 		} else {
 			//otherwise fallback on the tables own function

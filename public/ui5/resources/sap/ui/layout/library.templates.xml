@@ -42,6 +42,8 @@
 	titleAlignment: sap.ui.core.HorizontalAlign.Begin, // sap.ui.core.HorizontalAlign
 	titleLevel: sap.ui.core.TitleLevel.Auto, // sap.ui.core.TitleLevel
 	width: 0, // int
+	backgroundColorSet: undefined, // sap.ui.layout.BlockLayoutCellColorSet, since 1.48
+	backgroundColorShade: undefined, // sap.ui.layout.BlockLayoutCellColorShade, since 1.48
 	tooltip: undefined, // sap.ui.core.TooltipBase
 	customData: [], // sap.ui.core.CustomData
 	dependents: [], // sap.ui.core.Element, since 1.19
@@ -61,6 +63,8 @@
 	titleAlignment="Begin"
 	titleLevel="Auto"
 	width="0"
+	backgroundColorSet=""
+	backgroundColorShade=""
 	validateFieldGroup="">
 		<tooltip></tooltip> <!-- sap.ui.core.TooltipBase -->
 		<dependents></dependents> <!-- sap.ui.core.Element, since 1.19 -->
@@ -160,6 +164,7 @@
 	customData: [], // sap.ui.core.CustomData
 	dependents: [], // sap.ui.core.Element, since 1.19
 	content: [], // sap.ui.core.Control
+	ariaLabelledBy: [], // sap.ui.core.Control, since 1.48.7
 	validateFieldGroup: [function (oEvent) {
 		var ${control} = oEvent.getSource();
 	}, this]
@@ -178,6 +183,7 @@
 	defaultSpan="XL3 L3 M6 S12"
 	defaultIndent="XL0 L0 M0 S0"
 	containerQuery="false"
+	ariaLabelledBy=""
 	validateFieldGroup="">
 		<tooltip></tooltip> <!-- sap.ui.core.TooltipBase -->
 		<dependents></dependents> <!-- sap.ui.core.Element, since 1.19 -->
@@ -303,6 +309,7 @@
 	customData: [], // sap.ui.core.CustomData
 	dependents: [], // sap.ui.core.Element, since 1.19
 	content: [], // sap.ui.core.Control
+	ariaLabelledBy: [], // sap.ui.core.Control, since 1.48.7
 	validateFieldGroup: [function (oEvent) {
 		var ${control} = oEvent.getSource();
 	}, this]
@@ -315,6 +322,7 @@
 	visible="true"
 	fieldGroupIds=""
 	responsive="true"
+	ariaLabelledBy=""
 	validateFieldGroup="">
 		<tooltip></tooltip> <!-- sap.ui.core.TooltipBase -->
 		<dependents></dependents> <!-- sap.ui.core.Element, since 1.19 -->

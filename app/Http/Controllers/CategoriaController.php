@@ -9,6 +9,7 @@ class CategoriaController extends Controller
 {
     public function index(Request $request)
     {   
+
         $id_marca = $request->get('id_marca');
         if($id_marca)
         {
@@ -16,7 +17,7 @@ class CategoriaController extends Controller
             return Categoria::where('id_categoria', $id_categoria->id_categoria)->first();
         }
         
-        return Categoria::get();
+        return Categoria::orderBy('categoria', 'ASC')->get();
     }
 
     public function show(Categoria $categoria)

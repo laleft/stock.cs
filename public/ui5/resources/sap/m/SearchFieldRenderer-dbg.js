@@ -51,10 +51,6 @@ sap.ui.define(['jquery.sap.global'],
 		}
 
 		rm.writeClasses();
-		var sTooltip = oSF.getTooltip_AsString();
-		if (sTooltip) {
-			rm.writeAttributeEscaped("title", sTooltip);
-		}
 		rm.write(">");
 
 			// 1. Input type="search".
@@ -93,6 +89,11 @@ sap.ui.define(['jquery.sap.global'],
 
 			rm.writeAttribute("id", oSF.getId() + "-I");
 
+			var sTooltip = oSF.getTooltip_AsString();
+			if (sTooltip) {
+				rm.writeAttributeEscaped("title", sTooltip);
+			}
+
 			rm.addClass("sapMSFI");
 
 			if (sap.ui.Device.os.android && sap.ui.Device.os.version >= 4 && sap.ui.Device.os.version < 4.1 ) {
@@ -112,9 +113,9 @@ sap.ui.define(['jquery.sap.global'],
 			if (sValue) { rm.writeAttributeEscaped("value", sValue); }
 
 			//ARIA attributes
-			if (oSF.getEnabled() && bShowRefreshButton && oSF._sAriaF5Label) {
+			if (oSF.getEnabled() && bShowRefreshButton && oSF._sAriaF5LabelId) {
 				oAccAttributes.describedby = {
-					value: oSF._sAriaF5Label.getId(),
+					value: oSF._sAriaF5LabelId,
 					append: true
 				};
 			}

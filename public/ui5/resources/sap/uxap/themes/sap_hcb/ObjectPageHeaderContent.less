@@ -93,6 +93,17 @@
 			}
 		}
 
+		/* ObjectAttribute will not truncate inside ObjectPage but rather will go on more lines */
+		.sapUxAPObjectPageHeaderContentItem.sapMObjectAttributeActive {
+			line-height:1rem;
+		}
+		.sapMObjectAttributeActive .sapMObjectAttributeTitle,
+		.sapMObjectAttributeActive .sapMObjectAttributeText {
+			display: initial;
+			white-space: pre-line;
+			word-wrap: break-word;
+		}
+
 		.sapUiVltCell > .sapMObjectAttributeDiv, .sapUiVltCell > .sapMObjStatus {
 			line-height: 1.5rem;
 		}
@@ -187,14 +198,10 @@ html .sapUiContainer-Narrow .sapUxAPObjectPageHeaderContent {
 	margin: 0;
 }
 
-.sapUiMedia-Std-Desktop .sapUxAPObjectPageHeaderContentImageContainer .sapMImg {
-	height: 8rem;
-	width: auto;
-}
-
+.sapUiMedia-Std-Desktop .sapUxAPObjectPageHeaderContentImageContainer .sapMImg,
 .sapUiMedia-Std-Tablet .sapUxAPObjectPageHeaderContentImageContainer .sapMImg,
 html .sapUiContainer-Medium .sapUxAPObjectPageHeaderContentImageContainer .sapMImg {
-	height: 6rem;
+	height: 5rem;
 	width: auto;
 }
 
@@ -230,8 +237,8 @@ html[data-sap-ui-browser^="cr4"] .sapUxAPObjectPageHeaderContentImageContainer >
 
 .sapUiMedia-Std-Tablet .sapUxAPObjectPageHeaderContent .sapUxAPObjectPageHeaderPlaceholder,
 html .sapUiContainer-Medium .sapUxAPObjectPageHeaderContent .sapUxAPObjectPageHeaderPlaceholder {
-	width: 6rem;
-	height: 6rem;
+	width: 5rem;
+	height: 5rem;
 }
 
 .sapUiMedia-Std-Phone .sapUxAPObjectPageHeaderContent .sapUxAPObjectPageHeaderPlaceholder,

@@ -30,7 +30,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	 * The tokenizer can only be used as part of {@link sap.m.MultiComboBox MultiComboBox},{@link sap.m.MultiInput MultiInput} or {@link sap.ui.comp.valuehelpdialog.ValueHelpDialog ValueHelpDialog}
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -506,12 +506,20 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	 * @private
 	 */
 	Tokenizer.prototype._cut = function() {
-		var self = this;
-		var cutToClipboard = function(oEvent) {
-			var selectedTokens = self.getSelectedTokens(),
+		var self = this,
+			selectedTokens = self.getSelectedTokens(),
 			selectedText = "",
 			removedTokens = [],
-			token;
+			token,
+			cutToClipboard = function(oEvent) {
+				if (oEvent.clipboardData) {
+					oEvent.clipboardData.setData('text/plain', selectedText);
+				} else {
+					oEvent.originalEvent.clipboardData.setData('text/plain', selectedText);
+				}
+
+				oEvent.preventDefault();
+			};
 
 		for (var i = 0; i < selectedTokens.length; i++) {
 			token = selectedTokens[i];
@@ -534,19 +542,13 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 			return;
 		}
 
-		if (oEvent.clipboardData) {
-			oEvent.clipboardData.setData('text/plain', selectedText);
+		if (Device.browser.msie && window.clipboardData) {
+			window.clipboardData.setData("text", selectedText);
 		} else {
-			oEvent.originalEvent.clipboardData.setData('text/plain', selectedText);
+			document.addEventListener('cut', cutToClipboard);
+			document.execCommand('cut');
+			document.removeEventListener('cut', cutToClipboard);
 		}
-		oEvent.preventDefault();
-	};
-
-	document.addEventListener('cut', cutToClipboard);
-
-	document.execCommand('cut');
-
-	document.removeEventListener('cut', cutToClipboard);
 	};
 
 	/**
@@ -614,7 +616,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 
 		var oFocusedElement = jQuery(document.activeElement).control()[0];
 
-		// oFocusedElement could be undefined since the focus element might not correspond to a SAPUI5 Control
+		// oFocusedElement could be undefined since the focus element might not correspond to an SAPUI5 Control
 		var index = oFocusedElement ? this.getTokens().indexOf(oFocusedElement) : -1;
 
 		if (index == 0) {
@@ -663,7 +665,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 			return;
 		}
 
-		// oFocusedElement could be undefined since the focus element might not correspond to a SAPUI5 Control
+		// oFocusedElement could be undefined since the focus element might not correspond to an SAPUI5 Control
 		var index = oFocusedElement ? this.getTokens().indexOf(oFocusedElement) : -1;
 
 		if (index < iLength - 1) {
@@ -686,7 +688,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	};
 
 	/**
-	 * Function adds an validation callback called before any new token gets added to the tokens aggregation
+	 * Function adds a validation callback called before any new token gets added to the tokens aggregation
 	 *
 	 * @public
 	 * @param {function}
@@ -699,7 +701,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	};
 
 	/**
-	 * Function removes an validation callback
+	 * Function removes a validation callback
 	 *
 	 * @public
 	 * @param {function}
@@ -881,6 +883,11 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 
 		var tokenExists = this._tokenExists(oToken);
 		if (tokenExists) {
+			var oParent = this.getParent();
+			if (oParent instanceof sap.m.MultiInput && fValidateCallback) {
+				fValidateCallback(false);
+			}
+
 			return false;
 		}
 
@@ -992,7 +999,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 
 	Tokenizer.prototype.setTokens = function(aTokens) {
 		var oldTokens = this.getTokens();
-		this.destroyTokens();
+		this.removeAllTokens(false);
 
 		var i;
 		for (i = 0; i < aTokens.length; i++) {
@@ -1278,6 +1285,10 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	 * @param {jQuery.Event} oEvent The event object.
 	 */
 	Tokenizer.prototype.ontouchstart = function(oEvent) {
+
+		// needed when the control is inside active controls
+		oEvent.setMarked();
+
         // Workaround for chrome bug
         // BCP: 1680011538
 		if (Device.browser.chrome && window.getSelection()) {

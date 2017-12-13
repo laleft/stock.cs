@@ -28,7 +28,7 @@ sap.ui.define(['jquery.sap.global', './AnalyticalColumn', './Table', './TreeTabl
 	 * @see http://scn.sap.com/docs/DOC-44986
 	 *
 	 * @extends sap.ui.table.Table
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -244,7 +244,7 @@ sap.ui.define(['jquery.sap.global', './AnalyticalColumn', './Table', './TreeTabl
 	 * _bindAggregation is overwritten, and will be called by either ManagedObject.prototype.bindAggregation
 	 * or ManagedObject.prototype.setModel
 	 */
-	AnalyticalTable.prototype._bindAggregation = function(sName, sPath, oTemplate, oSorter, aFilters) {
+	AnalyticalTable.prototype._bindAggregation = function(sName, oBindingInfo) {
 		if (sName === "rows") {
 			// make sure to reset the first visible row (currently needed for the analytical binding)
 			// TODO: think about a boundary check to reset the firstvisiblerow if out of bounds
@@ -252,9 +252,15 @@ sap.ui.define(['jquery.sap.global', './AnalyticalColumn', './Table', './TreeTabl
 
 			// The current syntax for _bindAggregation is sPath can be an object wrapping the other parameters
 			// in this case we have to sanitize the parameters, so the ODataModelAdapter will instantiate the correct binding.
-			this._sanitizeBindingInfo.call(this, sPath, oTemplate, oSorter, aFilters);
+			this._sanitizeBindingInfo.call(this, oBindingInfo);
+
+			// The selectionChanged event is also a special AnalyticalTreeBindingAdapter event.
+			// The event interface is the same as in sap.ui.model.SelectionModel, due to compatibility with the sap.ui.table.Table.
+			Table._addBindingListener(oBindingInfo, "selectionChanged", this._onSelectionChanged.bind(this));
 		}
-		return Table.prototype._bindAggregation.apply(this, arguments);
+
+		// Create the binding.
+		Table.prototype._bindAggregation.call(this, sName, oBindingInfo);
 	};
 
 	/**
@@ -350,9 +356,16 @@ sap.ui.define(['jquery.sap.global', './AnalyticalColumn', './Table', './TreeTabl
 		if (!oBindingInfo.parameters.hasOwnProperty("sumOnTop")) {
 			oBindingInfo.parameters.sumOnTop = this.getSumOnTop();
 		}
+
 		if (!oBindingInfo.parameters.hasOwnProperty("numberOfExpandedLevels")) {
 			oBindingInfo.parameters.numberOfExpandedLevels = this.getNumberOfExpandedLevels();
 		}
+
+		// The binding does not support the number of expanded levels to be bigger than the number of grouped columns.
+		if (oBindingInfo.parameters.numberOfExpandedLevels > this._aGroupedColumns.length) {
+			oBindingInfo.parameters.numberOfExpandedLevels = 0;
+		}
+
 		if (!oBindingInfo.parameters.hasOwnProperty("autoExpandMode")) {
 			var sExpandMode = this.getAutoExpandMode();
 			if (sExpandMode != TreeAutoExpandMode.Bundled && sExpandMode != TreeAutoExpandMode.Sequential) {
@@ -369,18 +382,6 @@ sap.ui.define(['jquery.sap.global', './AnalyticalColumn', './Table', './TreeTabl
 		}
 
 		return oBindingInfo;
-	};
-
-	AnalyticalTable.prototype._attachBindingListener = function() {
-		var oBinding = this.getBinding("rows");
-
-		// The selectionChanged event is also a special AnalyticalTreeBindingAdapter event.
-		// The event interface is the same as in sap.ui.model.SelectionModel, due to compatibility with the sap.ui.table.Table
-		if (oBinding && !oBinding.hasListeners("selectionChanged")){
-			oBinding.attachSelectionChanged(this._onSelectionChanged, this);
-		}
-
-		Table.prototype._attachDataRequestedListeners.apply(this);
 	};
 
 	AnalyticalTable.prototype._getColumnInformation = function() {
@@ -1258,6 +1259,78 @@ sap.ui.define(['jquery.sap.global', './AnalyticalColumn', './Table', './TreeTabl
 	};
 
 	AnalyticalTable.prototype._getSelectedIndicesCount = TreeTable.prototype._getSelectedIndicesCount;
+
+	/**
+	 * Returns the current analytical information of the given row or <code>null</code> if no infomation is available
+	 * (for example, if the table is not bound or the given row has no binding context).
+	 *
+	 * The returned object provides the following information:
+	 * <ul>
+	 * <li><code>grandTotal</code> of type <code>boolean</code> Indicates whether the row is the grand total row</li>
+	 * <li><code>group</code> of type <code>boolean</code> Indicates whether the row is a group header</li>
+	 * <li><code>groupTotal</code> of type <code>boolean</code> Indicates whether the row is a totals row of a group</li>
+	 * <li><code>level</code> of type <code>integer</code> Level information (<code>-1</code> if no level information is available)</li>
+	 * <li><code>context</code> of type <code>sap.ui.model.Context</code> The binding context of the row</li>
+	 * <li><code>groupedColumns</code> of type <code>string[]</code> IDs of the grouped columns (only available for <code>group</code> and <code>groupTotal</code>)</li>
+	 * </ul>
+	 *
+	 * @param {sap.ui.table.Row} oRow The row for which the analytical information is returned
+	 *
+	 * @return {object} The analytical information of the given row
+	 * @private
+	 */
+	AnalyticalTable.prototype.getAnalyticalInfoOfRow = function(oRow) { //TBD: Make it public if needed
+		if (!this._validateRow(oRow)) {
+			return null;
+		}
+
+		var oBindingInfo = this.getBindingInfo("rows");
+		var oBinding = this.getBinding("rows");
+		if (!oBindingInfo || !oBinding) {
+			return null;
+		}
+
+		var oContext = oRow.getBindingContext(oBindingInfo.model);
+		if (!oContext) {
+			return null;
+		}
+
+		var bIsGrandTotal = oContext === oBinding.getGrandTotalContext();
+		var oContextInfo = null;
+		var iLevel = -1;
+		if (bIsGrandTotal) {
+			oContextInfo = oBinding.getGrandTotalContextInfo();
+			iLevel = 0;
+		} else {
+			oContextInfo = this.getContextInfoByIndex(oRow.getIndex());
+			if (oContextInfo) {
+				iLevel = oContextInfo.level;
+			}
+		}
+
+		var bIsGroup = oContextInfo && oBinding.nodeHasChildren && oBinding.nodeHasChildren(oContextInfo);
+		var bIsGroupTotal = !bIsGroup && !bIsGrandTotal && oContextInfo && oContextInfo.nodeState && oContextInfo.nodeState.sum;
+
+		var aGroupedColumns = [];
+
+		if (bIsGroupTotal || bIsGroup) {
+			var aAllGroupedColumns = this.getGroupedColumns();
+			if (aAllGroupedColumns.length > 0 && iLevel > 0 && iLevel <= aAllGroupedColumns.length) {
+				for (var i = 0; i < iLevel; i++) {
+					aGroupedColumns.push(aAllGroupedColumns[i]);
+				}
+			}
+		}
+
+		return {
+			grandTotal: bIsGrandTotal, // Whether the row is a grand total row
+			group: bIsGroup, // Whether the row is a group row
+			groupTotal: bIsGroupTotal, // Whether the row is a sum row belonging to a group
+			level: iLevel, // The level
+			context: oContext, // The row binding context
+			groupedColumns: aGroupedColumns // relevant columns (ids) for grouping (group and groupTotal only)
+		};
+	};
 
 	return AnalyticalTable;
 

@@ -6,6 +6,14 @@
     <tnt:ToolPage id="toolPage">
 		<tnt:header>
 			<tnt:ToolHeader>
+			<Button id="sideNavigationToggleButton"
+						icon="sap-icon://menu2"
+						type="Transparent"
+						press="onSideNavButtonPress">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="NeverOverflow" />
+					</layoutData>
+				</Button>
 				<Button
 						icon="sap-icon://home"
 						type="Transparent"
@@ -20,48 +28,19 @@
 						<OverflowToolbarLayoutData priority="Low" />
 					</layoutData>
 				</Button>
-				<Button text="Edit" type="Transparent">
+				<Button text="Configuración" type="Transparent">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="Low" />
 					</layoutData>
 				</Button>
-				<Button text="View" type="Transparent">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="Low" />
-					</layoutData>
-				</Button>
-				<Button text="Navigate" type="Transparent">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="Low" />
-					</layoutData>
-				</Button>
-				<Button text="Code" type="Transparent">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="Low" />
-					</layoutData>
-				</Button>
-				<Button text="Refactor" type="Transparent">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="Low" />
-					</layoutData>
-				</Button>
-				<Button text="Run" type="Transparent">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="Low" />
-					</layoutData>
-				</Button>
-				<Button text="Tools" type="Transparent">
-					<layoutData>
-						<OverflowToolbarLayoutData priority="Low" />
-					</layoutData>
-				</Button>
+				
 				<tnt:ToolHeaderUtilitySeparator />
 				<ToolbarSpacer>
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow" minWidth="20px" />
 					</layoutData>
 				</ToolbarSpacer>
-				<Button text="Alan Smith" type="Transparent" press="handleUserNamePress">
+				<Button text="Usuario" type="Transparent" press="handleUserNamePress">
 					<layoutData>
 						<OverflowToolbarLayoutData priority="NeverOverflow" />
 					</layoutData>

@@ -38,6 +38,15 @@
 @_sap_m_Dialog_HeaderShadowColor: lighten(@sapUiGroupContentBackground, 8);
 /* END "Dialog.less" */
 
+/* START "FeedInput.less" */
+/* ================================ */
+/* CSS for control sap.m/FeedInput  */
+/* Belize Plus Theme                */
+/* ================================ */
+
+@_sap_m_FeedInput_BackgroundColor: lighten(@sapUiBaseColor, 20);
+/* END "FeedInput.less" */
+
 /* START "HeaderContainer.less" */
 /* ====================================== */
 /* CSS for control sap.m/HeaderContainer  */
@@ -56,6 +65,13 @@
 @_sap_m_IconTabBar_TextHoverColor: lighten(@sapUiGroupTitleTextColor, 2);
 @_sap_m_IconTabBar_SelectedTextColor: @sapUiSelected;
 @_sap_m_IconTabBar_SelectedTextHoverColor: lighten(@sapUiSelected, 10);
+
+.sapContrastPlus .sapMITH.sapMITHBackgroundDesignTransparent,
+.sapContrastPlus.sapMITH.sapMITHBackgroundDesignTransparent,
+.sapContrastPlus .sapMITH.sapMITHBackgroundDesignTranslucent,
+.sapContrastPlus.sapMITH.sapMITHBackgroundDesignTranslucent {
+	background: @sapUiGroupContentBackground;
+}
 /* END "IconTabBar.less" */
 
 /* START "Link.less" */
@@ -100,8 +116,6 @@
 /* CSS for control sap.m/NotificationListGroup  */
 /* Belize Plus theme                            */
 /* ============================================ */
-
-@_sap_m_NotificationListGroup_CombinationBackground: none;
 /* END "NotificationListGroup.less" */
 
 /* START "ObjectMarker.less" */
@@ -222,6 +236,18 @@
 @_sap_m_Token_BorderColor: lighten(@sapUiButtonBackground, 15);
 @_sap_m_Token_HoverBorderColor: lighten(@sapUiButtonHoverBackground, 5);
 /* END "Token.less" */
+
+/* START "Toolbar.less" */
+/* ============================== */
+/* CSS for control sap.m/Toolbar  */
+/* Belize Plus theme              */
+/* ============================== */
+
+.sapContrastPlus .sapMTB.sapMTB-Transparent-CTX,
+.sapContrastPlus.sapMTB.sapMTB-Transparent-CTX {
+	background: @sapUiGroupContentBackground;
+}
+/* END "Toolbar.less" */
 
 /* START "ViewSettingsDialog.less" */
 /* ========================================= */

@@ -64,12 +64,6 @@ html.sap-tablet:not(.sap-desktop) input, html.sap-tablet:not(.sap-desktop) texta
 	background-color: @sapUiBlockLayerBackground;
 	opacity: 0.6;
 	filter: alpha(opacity=60);
-/* 	this overwrites the default position: fixed which extends the window when something rendered outside */
-	position: absolute;
-}
-
-html.sapUiMedia-Std-Desktop .sapUiBLy {
-	position: fixed; /* otherwise UX3 shell would not work... */
 }
 
 .sapUiSearchHighlightBG {
@@ -493,8 +487,13 @@ html.sap-desktop ::-webkit-scrollbar-corner {
 /* END "DatePicker.less" */
 
 /* START "Icon.less" */
-.sapUiIcon:focus {
-	outline: 1px dashed @sapUiKeyboardFocus;
+html:not([data-sap-ui-browser^="ie"]):not([data-sap-ui-browser^="ed"]) .sapUiIcon:focus {
+	outline-color: @sapUiKeyboardFocus;
+}
+
+html[data-sap-ui-browser^="ie"] .sapUiIcon:focus::after,
+html[data-sap-ui-browser^="ed"] .sapUiIcon:focus::after {
+	border-color: @sapUiKeyboardFocus;
 }
 
 .sapMTB-Info-CTX > .sapUiIcon {
@@ -583,8 +582,3 @@ html.sap-desktop ::-webkit-scrollbar-corner {
 	color: @sapUiDarkText;
 }
 /* END "parameterClasses.less" */
-
-/* START "Shadow.less" */
-
-/* END "Shadow.less" */
-

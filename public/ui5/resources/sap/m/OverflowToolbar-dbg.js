@@ -77,7 +77,7 @@ sap.ui.define([
 	 * @implements sap.ui.core.Toolbar,sap.m.IBar
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -190,6 +190,14 @@ sap.ui.define([
 
 
 	OverflowToolbar.prototype._doLayout = function () {
+		var oCore = sap.ui.getCore();
+
+		// If the theme is not applied, control widths should not be measured and cached
+		if (!oCore.isThemeApplied()) {
+			jQuery.sap.log.debug("OverflowToolbar: theme not applied yet, skipping calculations", this);
+			return;
+		}
+
 		var iWidth = this.$().width();
 
 		// Stop listening for control changes while calculating the layout to avoid an infinite loop scenario
@@ -273,7 +281,7 @@ sap.ui.define([
 				// Only add up the size of controls that can be shown in the toolbar, hence this addition is here
 				this._iContentSize += iControlSize;
 
-				if (OverflowToolbarAssociativePopoverControls.supportsControl(oControl) && bCanMoveToOverflow) {
+				if (OverflowToolbarAssociativePopoverControls.supportsControl(oControl) && bCanMoveToOverflow && oControl.getVisible()) {
 					this._aMovableControls.push(oControl);
 				} else {
 					this._aToolbarOnlyControls.push(oControl);
@@ -282,7 +290,7 @@ sap.ui.define([
 		}, this);
 
 		// If the system is a phone sometimes due to specificity in the flex the content can be rendered 1px larger that it should be.
-		// This causes a overflow of the last element/button
+		// This causes an overflow of the last element/button
 		if (sap.ui.Device.system.phone) {
 			this._iContentSize -= 1;
 		}
@@ -515,6 +523,9 @@ sap.ui.define([
 	 * @private
 	 */
 	OverflowToolbar.prototype._resetAndInvalidateToolbar = function (bHardReset) {
+		if (this._bIsBeingDestroyed) {
+			return;
+		}
 
 		this._resetToolbar();
 
@@ -990,7 +1001,17 @@ sap.ui.define([
 				return OverflowToolbarPriority.AlwaysOverflow;
 			}
 
-			return oLayoutData.getPriority();
+			var sPriority = oLayoutData.getPriority();
+
+			if (sPriority === OverflowToolbarPriority.Never) {
+				return OverflowToolbarPriority.NeverOverflow;
+			}
+
+			if (sPriority === OverflowToolbarPriority.Always) {
+				return OverflowToolbarPriority.AlwaysOverflow;
+			}
+
+			return sPriority;
 		}
 
 		return OverflowToolbarPriority.High;

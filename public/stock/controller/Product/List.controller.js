@@ -10,7 +10,7 @@ sap.ui.define([
 
         onInit: function () {
             var oModel = new JSONModel();
-            //oModel.loadData('http://nsstock.app/api/articulo/ultimos')
+            //oModel.loadData('/api/articulo/ultimos')
             //this.getView().setModel(oModel);
 
         },
@@ -21,8 +21,7 @@ sap.ui.define([
             //this.getView().setBusy(false);
             var oModel = new JSONModel();
 
-            oModel.loadData('http://nsstock.app/api/articulo/filtrar/', oParametros);
-
+            oModel.loadData('/api/articulo/filtrar/', oParametros);
             this.getView().setModel(oModel);
 
         },
@@ -35,7 +34,7 @@ sap.ui.define([
                     MessageToast.show('Escriba al menos tres caracteres para realizar la búsqueda');
                 }
                 else {
-                    oModel.loadData('http://nsstock.app/api/articulo/buscar/' + oInput.getSource().getValue());
+                    oModel.loadData('/api/articulo/buscar/' + oInput.getSource().getValue());
                 }
             }
             else {
@@ -43,7 +42,7 @@ sap.ui.define([
             }
 
             //oModel.setData(result);
-            //sap.ui.getCore().byId(this.getView().sId).getModel().loadData('http://nsstock.app/api/articulo/' + oInput.getSource().getValue()).refresh(true);
+            //sap.ui.getCore().byId(this.getView().sId).getModel().loadData('/api/articulo/' + oInput.getSource().getValue()).refresh(true);
         },
 
         onNavToAdd: function (oEvent) {
@@ -63,7 +62,9 @@ sap.ui.define([
             });
 
             var oModel = new JSONModel();
-            oModel.loadData('http://nsstock.app/api/categoria');
+            oModel.loadData('/api/categoria');
+            oModel.refresh(true);
+            oModel.updateBindings(true);
 
             if (!this._oDialog) {
                 this._oDialog = sap.ui.xmlfragment("cs.stock.view.Product.SelectDialog", this);
@@ -71,20 +72,13 @@ sap.ui.define([
                 // var oCategoriaList = new  sap.m.StandardListItem();
                 // oCategoriaList.setTitle("Seleccione una categoria");
                 // oCategoriaList.
-
                 this._oDialog.setModel(_oDialogConfig, 'config');
                 this._oDialog.setModel(oModel, 'data');
             }
 
-            // // Multi-select if required
-            // var bMultiSelect = !!oEvent.getSource().data("multi");
-            // this._oDialog.setMultiSelect(bMultiSelect);
+            this._oDialog.getModel('data').refresh(true);
+            this._oDialog.getModel('data').updateBindings(true);
 
-            // // Remember selections if required
-            // var bRemember = !!oEvent.getSource().data("remember");
-            // this._oDialog.setRememberSelections(bRemember);
-
-            // // clear the old search filter
             this._oDialog.getBinding("items").filter([]);
 
             // toggle compact style
@@ -99,7 +93,7 @@ sap.ui.define([
             });
 
             var oModel = new JSONModel();
-            oModel.loadData('http://nsstock.app/api/marca');
+            oModel.loadData('/api/marca', {"id_categoria": this._id_categoria});
 
             if (!this._oMarcaDialog) {
                 this._oMarcaDialog = sap.ui.xmlfragment("cs.stock.view.Product.SelectDialog", this);
@@ -131,6 +125,7 @@ sap.ui.define([
         },
 
         handleClose: function (oEvent) {
+
             var aContexts = oEvent.getParameter("selectedContexts");
             var _sCategoria = aContexts.map(function (oContext) { return oContext.getObject().categoria });
             var _sIdCategoira = aContexts.map(function (oContext) { return oContext.getObject().id_categoria.toString() });
@@ -138,12 +133,25 @@ sap.ui.define([
             if (aContexts.length) {
                 this.getView().byId('inputCategoria').setValue(_sCategoria);
                 this._filtrarArticulos({ "id_categoria": _sIdCategoira });
+                this._id_categoria = _sIdCategoira;
                 this.getView().byId('inputMarca').setEditable(true);
             }
             oEvent.getSource().getBinding("items").filter([]);
 
 
 
+        },
+
+        handleCloseMarca: function (oEvent) {
+            var aContexts = oEvent.getParameter("selectedContexts");
+            var _sMarca = aContexts.map(function (oContext) { return oContext.getObject().marca });
+            var _sIdMarca = aContexts.map(function (oContext) { return oContext.getObject().id_marca.toString() });
+
+            if (aContexts.length) {
+                this.getView().byId('inputMarca').setValue(_sMarca);
+                this._filtrarArticulos({ "id_marca": _sIdMarca });
+            }
+            oEvent.getSource().getBinding("items").filter([]);
         }
     });
 });

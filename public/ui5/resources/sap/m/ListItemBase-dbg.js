@@ -22,7 +22,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -196,6 +196,9 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	ListItemBase.prototype.DeleteIconURI = IconPool.getIconURI("sys-cancel");
 	ListItemBase.prototype.NavigationIconURI = IconPool.getIconURI("slim-arrow-right");
 
+	// defines the root tag name for rendering purposes
+	ListItemBase.prototype.TagName = "li";
+
 	// internal active state of the listitem
 	ListItemBase.prototype.init = function() {
 		this._active = false;
@@ -304,7 +307,8 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 		var aOutput = [],
 			mType = sap.m.ListType,
 			sType = this.getType(),
-			sHighlight = this.getHighlight();
+			sHighlight = this.getHighlight(),
+			sTooltip = this.getTooltip_AsString();
 
 		if (this.getSelected()) {
 			aOutput.push(oBundle.getText("LIST_ITEM_SELECTED"));
@@ -335,6 +339,10 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 
 		if (this.getContentAnnouncement) {
 			aOutput.push((this.getContentAnnouncement(oBundle) || "").trim());
+		}
+
+		if (sTooltip) {
+			aOutput.push(sTooltip);
 		}
 
 		return aOutput.join(" ");
@@ -868,7 +876,7 @@ sap.ui.define(['jquery.sap.global', './library', 'sap/ui/core/Control', 'sap/ui/
 	ListItemBase.prototype._activeHandling = function($This) {
 		$This.toggleClass("sapMLIBActive", this._active);
 
-		if (this.isActionable()) {
+		if (sap.ui.Device.system.Desktop && this.isActionable()) {
 			$This.toggleClass("sapMLIBHoverable", !this._active);
 		}
 	};

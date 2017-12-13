@@ -32,6 +32,49 @@
 .sapUiBusy {
 	display: none;
 }
+
+/* Typography */
+.sapMH1FontSize,
+.sapMH1Style {
+	font-size: @sapMFontHeader1Size !important;
+}
+
+.sapMH2FontSize,
+.sapMH2Style {
+	font-size: @sapMFontHeader2Size !important;
+}
+
+.sapMH3FontSize,
+.sapMH3Style {
+	font-size: @sapMFontHeader3Size !important;
+}
+
+.sapMH4FontSize,
+.sapMH4Style {
+	font-size: @sapMFontHeader4Size !important;
+}
+
+.sapMH5FontSize,
+.sapMH5Style {
+	font-size: @sapMFontHeader5Size !important;
+}
+
+.sapMH6FontSize,
+.sapMH6Style {
+	font-size: @sapMFontHeader6Size !important;
+}
+
+.sapMH1Style,
+.sapMH2Style,
+.sapMH3Style,
+.sapMH4Style,
+.sapMH5Style,
+.sapMH6Style {
+	font-family: @sapUiFontHeaderFamily !important;
+	font-weight: @sapUiFontHeaderWeight !important;
+	color: @sapUiGroupTitleTextColor !important;
+	text-shadow: @sapUiShadowText !important;
+}
 /* END "shared.less" */
 
 
@@ -82,8 +125,13 @@ html.sap-desktop ::-webkit-scrollbar-thumb:hover {
 /* Belize High Contrast White theme  */
 /* ================================= */
 
-.sapUiIcon:focus {
-	outline: 1px dashed @sapUiHcStandardForeground;
+html:not([data-sap-ui-browser^="ie"]):not([data-sap-ui-browser^="ed"]) .sapUiIcon:focus {
+	outline-color: @sapUiHcStandardForeground;
+}
+
+html[data-sap-ui-browser^="ie"] .sapUiIcon:focus::after,
+html[data-sap-ui-browser^="ed"] .sapUiIcon:focus::after {
+	border-color: @sapUiHcStandardForeground;
 }
 
 .sapUiIconColorNeutral {

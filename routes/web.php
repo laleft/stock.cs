@@ -12,8 +12,11 @@
 */
 
 Route::get('/', function () {
-    return view('index');
+    return view('element');
 });
+
+// Route::get('/', 'DashboardController@index');
+// Route::resource('articulo', 'ArticuloController');
 
 // Route::get('/importar', function(){
 
@@ -21,6 +24,8 @@ Route::get('/', function () {
 
 // });
 
+
 Route::get('/importar', 'ImportarController@importarDatos');
 Route::get('/importar/test', 'ImportarController@test');
 Route::get('/articulo/buscar/categoria', 'ArticuloController@buscarCategorias');
+Route::get('/importar-excel', 'ImportarExcelController@importar');

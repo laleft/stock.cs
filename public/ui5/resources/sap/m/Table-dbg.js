@@ -24,7 +24,7 @@ sap.ui.define(['jquery.sap.global', './ListBase', './ListItemBase', './library']
 	 * @extends sap.m.ListBase
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -65,7 +65,8 @@ sap.ui.define(['jquery.sap.global', './ListBase', './ListItemBase', './library']
 			 * Defines the columns of the table.
 			 */
 			columns : {type : "sap.m.Column", multiple : true, singularName : "column"}
-		}
+		},
+		designTime: true
 	}});
 
 	// class name for the navigation items
@@ -316,10 +317,9 @@ sap.ui.define(['jquery.sap.global', './ListBase', './ListItemBase', './library']
 		}
 
 		// find first visible column
-		var $table = jQuery(this.getTableDomRef()),
-			$headRow = $table.find("thead > tr"),
+		var $headRow = this.$("tblHeader"),
 			bHeaderVisible = !$headRow.hasClass("sapMListTblHeaderNone"),
-			aVisibleColumns = $headRow.find(".sapMListTblCell").filter(":visible"),
+			aVisibleColumns = $headRow.find(".sapMListTblCell:visible"),
 			$firstVisibleCol = aVisibleColumns.eq(0);
 
 		// check if only one column is visible
@@ -332,8 +332,18 @@ sap.ui.define(['jquery.sap.global', './ListBase', './ListItemBase', './library']
 			});
 		}
 
-		// update GroupHeader colspan according to visible column count and additional selection column
-		$table.find(".sapMGHLICell").attr("colspan", aVisibleColumns.length + !!sap.m.ListBaseRenderer.ModeOrder[this.getMode()]);
+		// update the visible column count and colspan
+		// highlight and navigation columns are getting rendered always
+		this._colCount = aVisibleColumns.length + 2 + !!sap.m.ListBaseRenderer.ModeOrder[this.getMode()];
+		this.$("tblBody").find(".sapMGHLICell").attr("colspan", this.getColSpan());
+		this.$("nodata-text").attr("colspan", this.getColCount());
+
+		// force IE to repaint in fixed layout mode
+		if (sap.ui.Device.browser.msie && this.getFixedLayout()) {
+			var oTableStyle = this.getTableDomRef().style;
+			oTableStyle.listStyleType = "circle";
+			window.setTimeout(function() { oTableStyle.listStyleType = "none"; }, 0);
+		}
 
 		// remove or show column header row(thead) according to column visibility value
 		if (!bColVisible && bHeaderVisible) {

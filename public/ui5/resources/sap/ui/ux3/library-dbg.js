@@ -20,14 +20,14 @@ sap.ui.define(['jquery.sap.global',
 	 * @namespace
 	 * @name sap.ui.ux3
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 * @public
 	 */
 
 	// delegate further initialization of this library to the Core
 	sap.ui.getCore().initLibrary({
 		name : "sap.ui.ux3",
-		version: "1.46.7",
+		version: "1.48.13",
 		dependencies : ["sap.ui.core","sap.ui.commons"],
 		types: [
 			"sap.ui.ux3.ActionBarSocialActions",
@@ -162,7 +162,7 @@ sap.ui.define(['jquery.sap.global',
 
 
 	/**
-	 * Type of an Feeder.
+	 * Type of a Feeder.
 	 *
 	 * @enum {string}
 	 * @public

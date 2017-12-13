@@ -5,8 +5,8 @@
  */
 
 // Provides control sap.m.TimePicker.
-sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRule', './ResponsivePopover', 'sap/ui/core/EnabledPropagator', 'sap/ui/core/IconPool', 'sap/ui/model/type/Time', './TimePickerSliders'],
-	function(jQuery, InputBase, MaskInput, MaskInputRule, ResponsivePopover, EnabledPropagator, IconPool, TimeModel, TimePickerSliders) {
+sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRule', './ResponsivePopover', 'sap/ui/core/EnabledPropagator', 'sap/ui/core/IconPool', 'sap/ui/model/type/Time', 'sap/ui/model/odata/type/Time', './TimePickerSliders', 'sap/ui/core/InvisibleText'],
+	function(jQuery, InputBase, MaskInput, MaskInputRule, ResponsivePopover, EnabledPropagator, IconPool, TimeModel, TimeODataModel, TimePickerSliders, InvisibleText) {
 		"use strict";
 
 		/**
@@ -79,7 +79,7 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 		 * @extends sap.m.MaskInput
 		 *
 		 * @author SAP SE
-		 * @version 1.46.7
+		 * @version 1.48.13
 		 *
 		 * @constructor
 		 * @public
@@ -95,8 +95,8 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 					 *
 					 * The default value is the browser's medium time format locale setting
 					 * {@link sap.ui.core.LocaleData#getTimePattern}.
-					 * If data binding with type {@link sap.ui.model.type.Time} is used for the
-					 * <code>value</code> property, the <code>displayFormat</code> property
+					 * If data binding with type {@link sap.ui.model.type.Time} or {@link sap.ui.model.odata.type.Time}
+					 * is used for the <code>value</code> property, the <code>displayFormat</code> property
 					 * is ignored as the information is provided from the binding itself.
 					 */
 					displayFormat : {type : "string", group : "Appearance", defaultValue : null},
@@ -106,8 +106,8 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 					 *
 					 * The default value is the browser's medium time format locale setting
 					 * {@link sap.ui.core.LocaleData#getTimePattern}.
-					 * If data binding with type {@link sap.ui.model.type.Time} is used for the
-					 * <code>value</code> property, the <code>valueFormat</code> property
+					 * If data binding with type {@link sap.ui.model.type.Time} or {@link sap.ui.model.odata.type.Time}
+					 * is used for the <code>value</code> property, the <code>valueFormat</code> property
 					 * is ignored as the information is provided from the binding itself.
 					 */
 					valueFormat : {type : "string", group : "Data", defaultValue : null},
@@ -129,7 +129,7 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 					 *  Holds a reference to a JavaScript Date Object. The <code>value</code> (string)
 					 * property will be set according to it. Alternatively, if the <code>value</code>
 					 * and <code>valueFormat</code> pair properties are supplied instead,
-					 * the <code>dateValue</code> will be instantiated аccording to the parsed
+					 * the <code>dateValue</code> will be instantiated according to the parsed
 					 * <code>value</code>.
 					 */
 					dateValue : {type : "object", group : "Data", defaultValue : null},
@@ -443,7 +443,7 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 			return this.setProperty("secondsStep", iStep, true);
 		};
 
-		/**
+		/*
 		 * Sets the title label inside the picker.
 		 *
 		 * @param {string} sTitle A title
@@ -623,6 +623,80 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 			}
 
 			return this;
+		};
+
+		/**
+		 * Sets tooltip of the control.
+		 *
+		 * @public
+		 * @override
+		 * @param {string|sap.ui.core.TooltipBase} vTooltip
+		 * @returns {sap.m.TimePicker} A reference to <code>this</code> instance to allow method chaining.
+		 */
+		TimePicker.prototype.setTooltip = function(vTooltip) {
+			/*
+			 * We need this override the default setter from <code>sap.m.Input</code> because the super class method
+			 * doesn't respect the custom role id of the TimePicker which we add in 'aria-describedby' internally.
+			 */
+			var oDomRef = this.getDomRef(),
+				sTooltip;
+
+			this._refreshTooltipBaseDelegate(vTooltip);
+			this.setAggregation("tooltip", vTooltip, true);
+
+			if (!oDomRef) {
+				return this;
+			}
+
+			sTooltip = this.getTooltip_AsString();
+
+			if (sTooltip) {
+				oDomRef.setAttribute("title", sTooltip);
+			} else {
+				oDomRef.removeAttribute("title");
+			}
+
+			this._handleTooltipHiddenTextLifecycle();
+
+			return this;
+		};
+
+		/**
+		 * Handles the addition/removal of the hidden span element (used as an hidden aria description) and its correct
+		 * reference with the TP inner input. This method requires <code>TimePicker</code> to be rendered in the DOM.
+		 * @private
+		 * @returns {void}
+		 */
+		TimePicker.prototype._handleTooltipHiddenTextLifecycle = function () {
+			var oRenderer,
+				sDescribedByReferences,
+				sAnnouncement,
+				sHiddenTextIdPattern,
+				bCreateHiddenText,
+				oHiddenAriaTooltipElement;
+
+			if (!sap.ui.getCore().getConfiguration().getAccessibility()) {
+				return;
+			}
+
+			oRenderer = this.getRenderer();
+			sDescribedByReferences = oRenderer.getAriaDescribedBy(this);
+			sAnnouncement = oRenderer.getDescribedByAnnouncement(this);
+			sHiddenTextIdPattern = this.getId() + "-describedby";
+			bCreateHiddenText = sDescribedByReferences.indexOf(sHiddenTextIdPattern) > -1;
+			oHiddenAriaTooltipElement = this.getDomRef("describedby");
+
+			if (bCreateHiddenText) {
+				oHiddenAriaTooltipElement = document.createElement("span");
+				oHiddenAriaTooltipElement.id = sHiddenTextIdPattern;
+				oHiddenAriaTooltipElement.setAttribute("aria-hidden", "true");
+				oHiddenAriaTooltipElement.className = "sapUiInvisibleText";
+				oHiddenAriaTooltipElement.textContent = sAnnouncement;
+				this.getDomRef().appendChild(oHiddenAriaTooltipElement);
+			} else {
+				this.getDomRef().removeChild(oHiddenAriaTooltipElement);
+			}
+			this._$input.attr("aria-describedby", sDescribedByReferences);
 		};
 
 		/**
@@ -1117,13 +1191,12 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 		 * @private
 		 */
 		TimePicker.prototype._getFormatter = function(bDisplayFormat) {
-			var sPattern = "",
+			var sPattern = this._getBoundValueTypePattern(),
 				bRelative = false,
 				oFormat,
 				oBinding = this.getBinding("value");
 
-			if (oBinding && oBinding.oType && (oBinding.oType instanceof TimeModel)) {
-				sPattern = oBinding.oType.getOutputPattern();
+			if (oBinding && oBinding.oType && oBinding.oType.oOutputFormat) {
 				bRelative = !!oBinding.oType.oOutputFormat.oFormatOptions.relative;
 			}
 
@@ -1505,9 +1578,18 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 					sValue = this._formatValue(oDate);
 				}
 			}
-			oInfo.role = "combobox";
-			oInfo.type = sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("ACC_CTR_TYPE_TIMEINPUT");
-			oInfo.description = [sValue, oRenderer.getLabelledByAnnouncement(this), oRenderer.getDescribedByAnnouncement(this)].join(" ").trim();
+
+			jQuery.extend(true, oInfo, {
+				role: oRenderer.getAriaRole(this),
+				type: sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("ACC_CTR_TYPE_TIMEINPUT"),
+				description: [sValue, oRenderer.getLabelledByAnnouncement(this), oRenderer.getDescribedByAnnouncement(this)].join(" ").trim(),
+				multiline: false,
+				autocomplete: "none",
+				expanded: false,
+				haspopup: true,
+				owns: this.getId() + "-sliders"
+			});
+
 			return oInfo;
 		};
 
@@ -1519,13 +1601,22 @@ sap.ui.define(['jquery.sap.global', './InputBase', './MaskInput', './MaskInputRu
 		}
 
 		TimePicker.prototype._getDisplayFormatPattern = function() {
-			var oBinding = this.getBinding("value");
+			return this._getBoundValueTypePattern() || this.getDisplayFormat();
+		};
 
-			if (oBinding && oBinding.oType && (oBinding.oType instanceof TimeModel)) {
-				return oBinding.oType.getOutputPattern();
+		TimePicker.prototype._getBoundValueTypePattern = function() {
+			var oBinding = this.getBinding("value"),
+				oBindingType = oBinding && oBinding.getType && oBinding.getType();
+
+			if (oBindingType instanceof TimeModel) {
+				return oBindingType.getOutputPattern();
 			}
 
-			return this.getDisplayFormat();
+			if (oBindingType instanceof TimeODataModel && oBindingType.oFormat) {
+				return oBindingType.oFormat.oFormatOptions.pattern;
+			}
+
+			return undefined;
 		};
 
 		/**

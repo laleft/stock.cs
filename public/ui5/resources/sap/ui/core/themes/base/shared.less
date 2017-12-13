@@ -65,8 +65,10 @@ link[id^="sap-ui-theme-"]::after,
 	background-color: #CCCCCC;
 	opacity: 0.6;
 	filter: alpha(opacity=60);
-	/* the left, right, top, bottom is set in Popup.js because window scroll
-	 position has to be considered */
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
 	position: fixed;
 	outline: 0 none;
 }
@@ -286,4 +288,23 @@ link[id^="sap-ui-theme-"]::after,
 .sapUiPseudoInvisibleText {
 	position: absolute !important;
 	clip: rect(1px, 1px, 1px, 1px);
+}
+
+/* CSS classes for bridging two buttons in the technical info dialog */
+.sapMBtn.sapUiDebugTechnicalInfoAssistantButton {
+	margin-right: 0 !important;
+}
+
+.sapMBtn.sapUiDebugTechnicalInfoAssistantButton>.sapMBtnInner {
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+}
+
+.sapMBtn.sapUiDebugTechnicalInfoAssistantSettingsButton {
+	margin-left: 0 !important;
+}
+
+.sapMBtn.sapUiDebugTechnicalInfoAssistantSettingsButton>.sapMBtnInner  {
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
 }

@@ -37,13 +37,31 @@ sap.ui.define([
 	var COLUMN_RESIZE_STEP_CSS_SIZE = "1em";
 
 	/**
+	 * Selects the text of an input element.
+	 *
+	 * @param {HTMLInputElement} oInputElement The input element whose text will be selected.
+	 * @param {boolean} [bSelect=true] If set to <code>true/code>, the text will be selected, otherwise the text selection will be cleared.
+	 */
+	function toggleTextSelection(oInputElement, bSelect) {
+		if (!(oInputElement instanceof window.HTMLInputElement)) {
+			return;
+		}
+
+		if (bSelect === false) {
+			oInputElement.setSelectionRange(0, 0);
+		} else {
+			oInputElement.select();
+		}
+	}
+
+	/**
 	 * New Delegate for keyboard events of sap.ui.table.Table controls.
 	 *
 	 * @class Delegate for keyboard events of sap.ui.table.Table controls.
 	 *
 	 * @extends sap.ui.base.Object
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 * @constructor
 	 * @private
 	 * @alias sap.ui.table.TableKeyboardDelegate2
@@ -549,7 +567,9 @@ sap.ui.define([
 			// Target is a data cell with interactive elements inside. Focus the first interactive element in the data cell.
 			oKeyboardExtension._suspendItemNavigation();
 			oActiveElement.tabIndex = -1;
+			toggleTextSelection(oActiveElement, false);
 			oKeyboardExtension._setSilentFocus($InteractiveElements[0]);
+			toggleTextSelection($InteractiveElements[0]);
 			return true;
 
 		} else if ($ParentCell !== null) {
@@ -565,7 +585,9 @@ sap.ui.define([
 	 * Hook which is called by the keyboard extension when the table leaves the action mode.
 	 * @see TableKeyboardExtension#setActionMode
 	 */
-	TableKeyboardDelegate.prototype.leaveActionMode = function() {
+	TableKeyboardDelegate.prototype.leaveActionMode = function(bAdjustFocus) {
+		bAdjustFocus = bAdjustFocus == null ? true : bAdjustFocus;
+
 		var oKeyboardExtension = this._getKeyboardExtension();
 		var oActiveElement = document.activeElement;
 
@@ -573,11 +595,15 @@ sap.ui.define([
 
 		var $ParentDataCell = TableUtils.getParentDataCell(this, oActiveElement);
 		var $ParentCell = $ParentDataCell || TableUtils.getParentRowActionCell(this, oActiveElement);
-		if ($ParentCell !== null) {
-			oKeyboardExtension._setSilentFocus($ParentCell);
-		} else {
-			oActiveElement.blur();
-			oKeyboardExtension._setSilentFocus(oActiveElement);
+
+		if (bAdjustFocus) {
+			if ($ParentCell !== null) {
+				toggleTextSelection(oActiveElement, false);
+				oKeyboardExtension._setSilentFocus($ParentCell);
+			} else {
+				oActiveElement.blur();
+				oKeyboardExtension._setSilentFocus(oActiveElement);
+			}
 		}
 	};
 
@@ -612,7 +638,8 @@ sap.ui.define([
 
 		var $ParentDataCell = TableUtils.getParentDataCell(this, $Target);
 		var $ParentCell = $ParentDataCell || TableUtils.getParentRowActionCell(this, $Target);
-		var bIsInteractiveElement = $ParentCell !== null && TableKeyboardDelegate._isElementInteractive($Target);
+		var bElementIsInCell = $ParentCell !== null;
+		var bIsInteractiveElement = bElementIsInCell && TableKeyboardDelegate._isElementInteractive($Target);
 
 		if (this._getKeyboardExtension().isInActionMode()) {
 			// Leave the action mode when focusing an element in the table which is not supported by the action mode.
@@ -622,11 +649,14 @@ sap.ui.define([
 			// - Interactive element inside a data cell.
 
 			var oCellInfo = TableUtils.getCellInfo(oEvent.target) || {};
+			var bElementIsACell = oCellInfo.cell != null;
 			var bIsRowHeaderCellInGroupHeaderRow = oCellInfo.type === CellType.ROWHEADER && TableUtils.Grouping.isInGroupingRow(oEvent.target);
 			var bIsRowSelectorCell = oCellInfo.type === CellType.ROWHEADER && !bIsRowHeaderCellInGroupHeaderRow && TableUtils.isRowSelectorSelectionAllowed(this);
 
-			if (!bIsRowHeaderCellInGroupHeaderRow && !bIsRowSelectorCell && !bIsInteractiveElement) {
+			if (bElementIsACell && !bIsRowHeaderCellInGroupHeaderRow && !bIsRowSelectorCell) {
 				this._getKeyboardExtension().setActionMode(false);
+			} else if (bElementIsInCell && !bIsInteractiveElement) {
+				this._getKeyboardExtension().setActionMode(false, false); // Leave the action mode silently (focus will not change).
 			}
 
 		} else if (bIsInteractiveElement) {
@@ -644,7 +674,15 @@ sap.ui.define([
 		// Toggle the action mode by changing the focus between a data cell and its interactive controls.
 		if (TableKeyboardDelegate._isKeyCombination(oEvent, jQuery.sap.KeyCodes.F2)) {
 			var bIsInActionMode = oKeyboardExtension.isInActionMode();
-			oKeyboardExtension.setActionMode(!bIsInActionMode);
+			var $ParentDataCell = TableUtils.getParentDataCell(this, oEvent.target);
+			var $ParentCell = $ParentDataCell || TableUtils.getParentRowActionCell(this, oEvent.target);
+
+			if (!bIsInActionMode && $ParentCell != null) {
+				$ParentCell.focus(); // A non-interactive element inside a cell is focused, focus the cell this element is inside.
+			} else {
+				oKeyboardExtension.setActionMode(!bIsInActionMode);
+			}
+
 			return;
 
 		// Expand/Collapse group.
@@ -816,6 +854,7 @@ sap.ui.define([
 			var $RowActionCell = TableUtils.getParentRowActionCell(this, oEvent.target);
 			var iRowIndex;
 			var bIsRowHeaderCell = false;
+			var $InteractiveElement;
 
 			if ($DataCell === null && $RowActionCell === null) {
 				if (oCellInfo.type === CellType.ROWHEADER) {
@@ -864,7 +903,10 @@ sap.ui.define([
 							if (bTableHasRowSelectors || bScrolledRowIsGroupHeaderRow) {
 								TableKeyboardDelegate._focusRowSelector(this, iRowIndex);
 							} else {
-								TableKeyboardDelegate._getFirstInteractiveElement(oRow).focus();
+								$InteractiveElement = TableKeyboardDelegate._getFirstInteractiveElement(oRow);
+								toggleTextSelection(document.activeElement, false);
+								$InteractiveElement.focus();
+								toggleTextSelection($InteractiveElement[0]);
 							}
 						}.bind(this), 0);
 					}.bind(this));
@@ -879,17 +921,26 @@ sap.ui.define([
 					if (bTableHasRowSelectors || bNextRowIsGroupHeaderRow) {
 						TableKeyboardDelegate._focusRowSelector(this, iNextRowIndex);
 					} else {
-						TableKeyboardDelegate._getFirstInteractiveElement(oNextRow).focus();
+						$InteractiveElement = TableKeyboardDelegate._getFirstInteractiveElement(oNextRow);
+						toggleTextSelection(document.activeElement, false);
+						$InteractiveElement.focus();
+						toggleTextSelection($InteractiveElement[0]);
 					}
 				}
 
 			} else if (bIsRowHeaderCell) {
 				oEvent.preventDefault();
-				TableKeyboardDelegate._getFirstInteractiveElement(oRow).focus();
+				$InteractiveElement = TableKeyboardDelegate._getFirstInteractiveElement(oRow);
+				toggleTextSelection(document.activeElement, false);
+				$InteractiveElement.focus();
+				toggleTextSelection($InteractiveElement[0]);
 
 			} else {
 				oEvent.preventDefault();
-				TableKeyboardDelegate._getNextInteractiveElement(this, oEvent.target).focus();
+				$InteractiveElement = TableKeyboardDelegate._getNextInteractiveElement(this, oEvent.target);
+				toggleTextSelection(document.activeElement, false);
+				$InteractiveElement.focus();
+				toggleTextSelection($InteractiveElement[0]);
 			}
 
 		} else if (oCellInfo.type === CellType.COLUMNHEADER ||
@@ -930,6 +981,7 @@ sap.ui.define([
 			var $RowActionCell = TableUtils.getParentRowActionCell(this, oEvent.target);
 			var iRowIndex;
 			var bIsRowHeaderCell = false;
+			var $InteractiveElement;
 
 			if ($DataCell === null && $RowActionCell === null) {
 				if (oCellInfo.type === CellType.ROWHEADER) {
@@ -984,7 +1036,10 @@ sap.ui.define([
 							if (bScrolledRowIsGroupHeaderRow) {
 								TableKeyboardDelegate._focusRowSelector(this, iRowIndex);
 							} else {
-								TableKeyboardDelegate._getLastInteractiveElement(oRow).focus();
+								$InteractiveElement = TableKeyboardDelegate._getLastInteractiveElement(oRow);
+								toggleTextSelection(document.activeElement, false);
+								$InteractiveElement.focus();
+								toggleTextSelection($InteractiveElement[0]);
 							}
 						}.bind(this), 0);
 					}.bind(this));
@@ -999,13 +1054,19 @@ sap.ui.define([
 					if (bPreviousRowIsGroupHeaderRow) {
 						TableKeyboardDelegate._focusRowSelector(this, iPreviousRowIndex);
 					} else {
-						TableKeyboardDelegate._getLastInteractiveElement(oPreviousRow).focus();
+						$InteractiveElement = TableKeyboardDelegate._getLastInteractiveElement(oPreviousRow);
+						toggleTextSelection(document.activeElement, false);
+						$InteractiveElement.focus();
+						toggleTextSelection($InteractiveElement[0]);
 					}
 				}
 
 			} else {
 				oEvent.preventDefault();
-				TableKeyboardDelegate._getPreviousInteractiveElement(this, oEvent.target).focus();
+				$InteractiveElement = TableKeyboardDelegate._getPreviousInteractiveElement(this, oEvent.target);
+				toggleTextSelection(document.activeElement, false);
+				$InteractiveElement.focus();
+				toggleTextSelection($InteractiveElement[0]);
 			}
 
 		} else if (oCellInfo.type === CellType.DATACELL ||
@@ -1083,7 +1144,9 @@ sap.ui.define([
 				var keyboardExtension = oTable._getKeyboardExtension();
 				// skip additional focus handling in KeyboardExtension:
 				keyboardExtension._actionMode = !!interactiveElement;
+				toggleTextSelection(document.activeElement, false);
 				keyboardExtension._setSilentFocus(interactiveElement || cell);
+				toggleTextSelection(interactiveElement);
 			}
 		}
 		if (sCellType === CellType.ROWHEADER) {
@@ -1114,12 +1177,27 @@ sap.ui.define([
 		var bScrolled = false;
 		var oTable = this;
 
-		// go into the action mode if the Ctrl key is pressed or if action mode is active
-		var bFocusActive = TableKeyboardDelegate._isKeyCombination(oEvent, null, ModKey.CTRL) || bInActionMode;
-
 		if (oCellInfo.type === CellType.DATACELL ||
 			oCellInfo.type === CellType.ROWHEADER ||
 			oCellInfo.type === CellType.ROWACTION) {
+
+			// go into the action mode if the Ctrl key is pressed or if action mode is active
+			var bCtrlKeyPressed = TableKeyboardDelegate._isKeyCombination(oEvent, null, ModKey.CTRL);
+			var bFocusActive = bCtrlKeyPressed || bInActionMode;
+			var $ParentDataCell = TableUtils.getParentDataCell(this, oEvent.target);
+			var $ParentCell = $ParentDataCell || TableUtils.getParentRowActionCell(this, oEvent.target);
+
+			// If only the up or down key was pressed in text input elements, navigation should not be performed.
+			if (!bCtrlKeyPressed && (oEvent.target instanceof window.HTMLInputElement || oEvent.target instanceof window.HTMLTextAreaElement)) {
+				return;
+			}
+
+			// If only the up or down key was pressed while the table is in navigation mode, and a non-interactive element inside a cell is focused,
+			// set the focus to the cell this element is inside.
+			if (!bFocusActive && $ParentCell != null) {
+				$ParentCell.focus();
+				return;
+			}
 
 			preventItemNavigation(oEvent);
 
@@ -1133,14 +1211,21 @@ sap.ui.define([
 					this.attachEventOnce("_rowsUpdated", function() {
 						setTimeout(function() {
 							focusTableCell(oTable, oCellInfo.row, oCellInfo.col, oCellInfo.type, true);
+							oEvent.preventDefault(); // Prevent positioning the cursor. The text should be selected instead.
 						}, 0);
 					});
 				}
 			} else {
 				if (oCellInfo.row === oTable.getVisibleRowCount() - 1) {
-					oKeyboardExtension.setActionMode(false); // go out of the action mode on the bottom row
+					// Leave the action mode when trying to navigate down on the last row.
+					if (!bInActionMode && $ParentCell != null) {
+						$ParentCell.focus(); // A non-interactive element inside a cell is focused, focus the cell this element is inside.
+					} else {
+						oKeyboardExtension.setActionMode(false);
+					}
 				} else {
 					focusTableCell(oTable, oCellInfo.row + 1, oCellInfo.col, oCellInfo.type, bFocusActive);
+					oEvent.preventDefault(); // Prevent positioning the cursor. The text should be selected instead.
 				}
 			}
 		} else if (oCellInfo.type === CellType.COLUMNHEADER ||
@@ -1255,12 +1340,27 @@ sap.ui.define([
 		var bScrolled = false;
 		var oTable = this;
 
-		// go into the action mode if the Ctrl key is pressed or if action mode is active
-		var bFocusActive = TableKeyboardDelegate._isKeyCombination(oEvent, null, ModKey.CTRL) || bInActionMode;
-
 		if (oCellInfo.type === CellType.DATACELL ||
 			oCellInfo.type === CellType.ROWHEADER ||
 			oCellInfo.type === CellType.ROWACTION) {
+
+			// go into the action mode if the Ctrl key is pressed or if action mode is active
+			var bCtrlKeyPressed = TableKeyboardDelegate._isKeyCombination(oEvent, null, ModKey.CTRL);
+			var bFocusActive = bCtrlKeyPressed || bInActionMode;
+			var $ParentDataCell = TableUtils.getParentDataCell(this, oEvent.target);
+			var $ParentCell = $ParentDataCell || TableUtils.getParentRowActionCell(this, oEvent.target);
+
+			// If only the up or down key was pressed in text input elements, navigation should not be performed.
+			if (!bCtrlKeyPressed && (oEvent.target instanceof window.HTMLInputElement || oEvent.target instanceof window.HTMLTextAreaElement)) {
+				return;
+			}
+
+			// If only the up or down key was pressed while the table is in navigation mode, and a non-interactive element inside a cell is focused,
+			// set the focus to the cell this element is inside.
+			if (!bFocusActive && $ParentCell != null) {
+				$ParentCell.focus();
+				return;
+			}
 
 			preventItemNavigation(oEvent); // default action, see one exception below
 
@@ -1272,15 +1372,22 @@ sap.ui.define([
 					this.attachEventOnce("_rowsUpdated", function() {
 						setTimeout(function() {
 							focusTableCell(oTable, oCellInfo.row, oCellInfo.col, oCellInfo.type, true);
+							oEvent.preventDefault(); // Prevent positioning the cursor. The text should be selected instead.
 						}, 0);
 					});
 				}
 			} else if (oCellInfo.row === 0) {
-				// exit active mode; in case of the navigation mode, go to column header cells but not from row actions
-				oKeyboardExtension.setActionMode(false);
 				preventItemNavigation(oEvent, !!bFocusActive || oCellInfo.type === CellType.ROWACTION);
+
+				// Leave the action mode when trying to navigate up on the first row.
+				if (!bInActionMode && $ParentCell != null) {
+					$ParentCell.focus(); // A non-interactive element inside a cell is focused, focus the cell this element is inside.
+				} else {
+					oKeyboardExtension.setActionMode(false);
+				}
 			} else { // focus the data cell above the current one
 				focusTableCell(oTable, oCellInfo.row - 1, oCellInfo.col, oCellInfo.type, bFocusActive);
+				oEvent.preventDefault(); // Prevent positioning the cursor. The text should be selected instead.
 			}
 		}
 	};

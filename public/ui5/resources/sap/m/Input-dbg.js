@@ -66,7 +66,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 	 *
 	 * @extends sap.m.InputBase
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -101,7 +101,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 			 * The data is displayed and the user input is parsed according to this format.
 			 * NOTE: The value property is always of the form RFC 3339 (YYYY-MM-dd).
 			 * @deprecated Since version 1.9.1.
-			 * <code>sap.m.DatePicker</code>, <code>sap.m.TimePicher</code> or <code>sap.m.DateTimePicker</code> should be used for date/time inputs and formating.
+			 * <code>sap.m.DatePicker</code>, <code>sap.m.TimePicker</code> or <code>sap.m.DateTimePicker</code> should be used for date/time inputs and formating.
 			 */
 			dateFormat : {type : "string", group : "Misc", defaultValue : 'YYYY-MM-dd', deprecated: true},
 
@@ -215,7 +215,12 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 			 * Note: If this aggregation is filled, the aggregation suggestionItems will be ignored.
 			 * @since 1.21.1
 			 */
-			suggestionRows : {type : "sap.m.ColumnListItem", multiple : true, singularName : "suggestionRow", bindable : "bindable"}
+			suggestionRows : {type : "sap.m.ColumnListItem", multiple : true, singularName : "suggestionRow", bindable : "bindable"},
+
+			/**
+			 * The icon on the right side of the Input
+			 */
+			_valueHelpIcon : {type : "sap.ui.core.Icon", multiple: false, visibility: "hidden"}
 		},
 		associations: {
 
@@ -241,7 +246,19 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 					/**
 					 * The new value of the input.
 					 */
-					value : {type : "string"}
+					value : {type : "string"},
+
+					/**
+					 * Indicate that ESC key triggered the event.
+					 * @since 1.48
+					 */
+					escPressed : {type : "boolean"},
+
+					/**
+					 * The value of the input before pressing ESC key.
+					 * @since 1.48
+					 */
+					previousValue : {type : "string"}
 				}
 			},
 
@@ -460,11 +477,6 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 			this._oList = null;
 		}
 
-		if (this._oValueHelpIcon) {
-			this._oValueHelpIcon.destroy();
-			this._oValueHelpIcon = null;
-		}
-
 		if (this._oSuggestionTable) {
 			this._oSuggestionTable.destroy();
 			this._oSuggestionTable = null;
@@ -574,9 +586,20 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 			return;
 		}
 
-		var sKey = this.getSelectedKey();
+		var sKey = this.getSelectedKey(),
+			bHasSelectedItem;
 
 		if (sKey === '') {
+			return;
+		}
+
+		if (this._hasTabularSuggestions()) {
+			bHasSelectedItem = !!this._oSuggestionTable.getSelectedItem();
+		} else {
+			bHasSelectedItem = !!this._oList.getSelectedItem();
+		}
+
+		if (bHasSelectedItem) {
 			return;
 		}
 
@@ -865,27 +888,34 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 	 * @private
 	 */
 	Input.prototype._getValueHelpIcon = function () {
-		var that = this;
+		var that = this,
+			valueHelpIcon = this.getAggregation("_valueHelpIcon"),
+			sURI;
 
-		if (!this._oValueHelpIcon) {
-			var sURI = IconPool.getIconURI("value-help");
-			this._oValueHelpIcon = IconPool.createControlByURI({
-				id: this.getId() + "-vhi",
-				src: sURI,
-				useIconTooltip: false,
-				noTabStop: true
-			});
-
-			this._oValueHelpIcon.addStyleClass("sapMInputValHelpInner");
-			this._oValueHelpIcon.attachPress(function (evt) {
-				// if the property valueHelpOnly is set to true, the event is triggered in the ontap function
-				if (!that.getValueHelpOnly()) {
-					that.fireValueHelpRequest({fromSuggestions: false});
-				}
-			});
+		if (valueHelpIcon) {
+			return valueHelpIcon;
 		}
 
-		return this._oValueHelpIcon;
+		sURI = IconPool.getIconURI("value-help");
+		valueHelpIcon = IconPool.createControlByURI({
+			id: this.getId() + "-vhi",
+			src: sURI,
+			useIconTooltip: false,
+			noTabStop: true
+		});
+
+		valueHelpIcon.addStyleClass("sapMInputValHelpInner");
+		valueHelpIcon.attachPress(function (evt) {
+			// if the property valueHelpOnly is set to true, the event is triggered in the ontap function
+			if (!that.getValueHelpOnly()) {
+				this.getParent().focus();
+				that.fireValueHelpRequest({fromSuggestions: false});
+			}
+		});
+
+		this.setAggregation("_valueHelpIcon", valueHelpIcon);
+
+		return valueHelpIcon;
 	};
 
 	/**
@@ -965,6 +995,15 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 		jQuery.sap.assert(typeof (fnFilter) === "function", "Input.setRowResultFunction: first argument fnFilter must be a function on " + this);
 		this._fnRowResultFilter = fnFilter;
 		return this;
+	};
+
+	/**
+	 * Closes the suggestion list.
+	 * @public
+	 * @since 1.48
+	 */
+	Input.prototype.closeSuggestions = function() {
+		this._closeSuggestionPopup();
 	};
 
 	Input.prototype.setShowValueHelp = function(bShowValueHelp) {
@@ -1057,14 +1096,29 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 		return oItem.getVisible() && (this._hasTabularSuggestions() || oItem.getType() !== sap.m.ListType.Inactive);
 	};
 
+	// helper method for distinguish between incremental and non incremental types of input
+	Input.prototype._isIncrementalType = function () {
+		var sTypeOfInput = this.getType();
+		if (sTypeOfInput === "Number" || sTypeOfInput === "Date" ||
+			sTypeOfInput === "Datetime" || sTypeOfInput === "Month" ||
+			sTypeOfInput === "Time" || sTypeOfInput === "Week") {
+			return true;
+		}
+		return false;
+	};
+
 	Input.prototype._onsaparrowkey = function(oEvent, sDir, iItems) {
 		if (!this.getEnabled() || !this.getEditable()) {
 			return;
 		}
-		if (!this._oSuggestionPopup || !this._oSuggestionPopup.isOpen()) {
+		if (sDir !== "up" && sDir !== "down") {
 			return;
 		}
-		if (sDir !== "up" && sDir !== "down") {
+		if (this._isIncrementalType()){
+			oEvent.setMarked();
+		}
+
+		if (!this._oSuggestionPopup || !this._oSuggestionPopup.isOpen()) {
 			return;
 		}
 
@@ -1345,15 +1399,21 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 
 		if (sValue.length >= this.getStartSuggestion()) {
 			this._iSuggestDelay = jQuery.sap.delayedCall(300, this, function(){
-				this._bBindingUpdated = false;
-				this.fireSuggest({
-					suggestValue: sValue
-				});
-				// if binding is updated during suggest event, the list items don't need to be refreshed here
-				// because they will be refreshed in updateItems function.
-				// This solves the popup blinking problem
-				if (!this._bBindingUpdated) {
-					this._refreshItemsDelayed();
+
+				if (this._sPrevSuggValue !== sValue) {
+
+					this._bBindingUpdated = false;
+					this.fireSuggest({
+						suggestValue: sValue
+					});
+					// if binding is updated during suggest event, the list items don't need to be refreshed here
+					// because they will be refreshed in updateItems function.
+					// This solves the popup blinking problem
+					if (!this._bBindingUpdated) {
+						this._refreshItemsDelayed();
+					}
+
+					this._sPrevSuggValue = sValue;
 				}
 			});
 		} else if (this._bUseDialog) {
@@ -1364,8 +1424,14 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 				this._oList.destroyItems();
 			}
 		} else if (this._oSuggestionPopup && this._oSuggestionPopup.isOpen()) {
-			this._iPopupListSelectedIndex = -1;
-			this._closeSuggestionPopup();
+
+			jQuery.sap.delayedCall(0, this, function () {
+				var sNewValue = this._$input.val() || '';
+				if (sNewValue < this.getStartSuggestion()) {
+					this._iPopupListSelectedIndex = -1;
+					this._closeSuggestionPopup();
+				}
+			});
 		}
 	};
 
@@ -1605,6 +1671,8 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 				this.$("SuggDescr").text(""); // initialize suggestion ARIA text
 				this.$("inner").removeAttr("aria-haspopup");
 				this.$("inner").removeAttr("aria-activedescendant");
+
+				this._sPrevSuggValue = null;
 			}
 
 		};
@@ -2076,6 +2144,8 @@ sap.ui.define(['jquery.sap.global', './Bar', './Dialog', './InputBase', './List'
 			this._triggerSuggest(this.getValue());
 		}
 		this._bPopupHasFocus = undefined;
+
+		this._sPrevSuggValue = null;
 	};
 
 	/**

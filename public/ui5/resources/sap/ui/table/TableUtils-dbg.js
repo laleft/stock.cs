@@ -5,8 +5,10 @@
  */
 
 // Provides helper sap.ui.table.TableUtils.
-sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHandler', './TableGrouping', './TableColumnUtils', './TableMenuUtils', 'sap/ui/Device', './library'],
-	function(jQuery, Control, ResizeHandler, TableGrouping, TableColumnUtils, TableMenuUtils, Device, library) {
+sap.ui.define([
+	"jquery.sap.global", "sap/ui/core/Control", "sap/ui/core/ResizeHandler", "sap/ui/core/MessageType", "sap/ui/Device", "sap/ui/model/ChangeReason",
+	"./TableGrouping", "./TableColumnUtils", "./TableMenuUtils", "./library"
+], function(jQuery, Control, ResizeHandler, MessageType, Device, ChangeReason, TableGrouping, TableColumnUtils, TableMenuUtils, library) {
 	"use strict";
 
 	// Shortcuts
@@ -44,7 +46,7 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHa
 	 * Static collection of utility functions related to the sap.ui.table.Table, ...
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 * @namespace
 	 * @name sap.ui.table.TableUtils
 	 * @private
@@ -70,6 +72,8 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHa
 		 * The default row heights in pixels for the different content densities.
 		 *
 		 * @type {DefaultRowHeight}
+		 * @static
+		 * @constant
 		 * @typedef {Object} DefaultRowHeight
 		 * @property {int} sapUiSizeCondensed - The default height of a row in pixels in condensed content density.
 		 * @property {int} sapUiSizeCompact - The default height of a row in pixels in compact content density.
@@ -84,6 +88,49 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHa
 		},
 
 		/**
+		 * Reason for updates of the rows. Inherits from {@link sap.ui.model.ChangeReason}.
+		 *
+		 * @type {RowsUpdateReason}
+		 * @static
+		 * @constant
+		 * @typedef {Object} RowsUpdateReason
+		 * @property {string} Sort - {@link sap.ui.model.ChangeReason.Sort}
+		 * @property {string} Filter - {@link sap.ui.model.ChangeReason.Filter}
+		 * @property {string} Change - {@link sap.ui.model.ChangeReason.Change}
+		 * @property {string} Context - {@link sap.ui.model.ChangeReason.Context}
+		 * @property {string} Refresh - {@link sap.ui.model.ChangeReason.Refresh}
+		 * @property {string} Expand - {@link sap.ui.model.ChangeReason.Expand}
+		 * @property {string} Collapse - {@link sap.ui.model.ChangeReason.Collapse}
+		 * @property {string} Remove - {@link sap.ui.model.ChangeReason.Remove}
+		 * @property {string} Add - {@link sap.ui.model.ChangeReason.Add}
+		 * @property {string} Binding - {@link sap.ui.model.ChangeReason.Binding}
+		 * @property {string} Render - The table has been rendered.
+		 * @property {string} VerticalScroll - The table has been scrolled vertically.
+		 * @property {string} FirstVisibleRowChange - The first visible row has been changed by API call.
+		 * @property {string} Unbind - The row binding has been removed.
+		 * @property {string} Animation - An animation has been performed.
+		 * @property {string} Resize - The table has been resized.
+		 * @property {string} Unknown - The reason for the update is unknown.
+		 */
+		RowsUpdateReason: (function() {
+			var mUpdateRowsReason = {};
+
+			for (var sProperty in ChangeReason) {
+				mUpdateRowsReason[sProperty] = ChangeReason[sProperty];
+			}
+
+			mUpdateRowsReason.Render = "Render";
+			mUpdateRowsReason.VerticalScroll = "VerticalScroll";
+			mUpdateRowsReason.FirstVisibleRowChange = "FirstVisibleRowChange";
+			mUpdateRowsReason.Unbind = "Unbind";
+			mUpdateRowsReason.Animation = "Animation";
+			mUpdateRowsReason.Resize = "Resize";
+			mUpdateRowsReason.Unknown = "Unknown";
+
+			return mUpdateRowsReason;
+		})(),
+
+		/**
 		 * Returns whether the table has a row header or not
 		 * @param {sap.ui.table.Table} oTable Instance of the table
 		 * @return {boolean}
@@ -93,6 +140,43 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHa
 			return (oTable.getSelectionMode() !== SelectionMode.None
 					&& oTable.getSelectionBehavior() !== SelectionBehavior.RowOnly)
 					|| TableGrouping.isGroupMode(oTable);
+		},
+
+		/**
+		 * Returns whether the table has a SelectAll checkbox.
+		 *
+		 * @param {sap.ui.table.Table} oTable Instance of the table.
+		 * @return {boolean} Returns <code>true</code>, if the table has a SelectAll checkbox.
+		 * @private
+		 */
+		hasSelectAll: function(oTable) {
+			var sSelectionMode = oTable != null ? oTable.getSelectionMode() : SelectionMode.None;
+			return (sSelectionMode === SelectionMode.Multi || sSelectionMode === SelectionMode.MultiToggle)
+				   && oTable.getEnableSelectAll();
+		},
+
+		/**
+		 * Returns whether the table has row highlights.
+		 *
+		 * @param {sap.ui.table.Table} oTable Instance of the table
+		 * @return {boolean} Returns <code>true</code>, if the table has row highlights
+		 * @private
+		 */
+		hasRowHighlights: function(oTable) {
+			if (oTable == null) {
+				return false;
+			}
+
+			var oRowSettingsTemplate = oTable.getRowSettingsTemplate();
+
+			if (oRowSettingsTemplate == null) {
+				return false;
+			}
+
+			var sHighlight = oRowSettingsTemplate.getHighlight();
+
+			return oRowSettingsTemplate.isBound("highlight")
+				   || (sHighlight != null && sHighlight !== MessageType.None);
 		},
 
 		/**
@@ -113,7 +197,11 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHa
 		 * @private
 		 */
 		hasRowActions : function(oTable) {
-			return !!oTable.getRowActionTemplate() && TableUtils.getRowActionCount(oTable) > 0;
+			var oRowActionTemplate = oTable.getRowActionTemplate();
+
+			return oRowActionTemplate != null
+				   && (oRowActionTemplate.isBound("visible") || oRowActionTemplate.getVisible())
+				   && TableUtils.getRowActionCount(oTable) > 0;
 		},
 
 		/**
@@ -200,7 +288,57 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHa
 				return false;
 			}
 
-			return oTable.getDomRef().querySelector(".sapUiLocalBusyIndicator") != null;
+			return oTable.getDomRef().querySelector(".sapUiTableCnt > .sapUiLocalBusyIndicator") != null;
+		},
+
+		/**
+		 * Returns whether one or more requests are currently in process by the binding.
+		 *
+		 * @param {sap.ui.table.Table} oTable Instance of the table.
+		 * @return {boolean} Returns <code>true</code>, if the binding of the table is currently requesting data.
+		 * @private
+		 */
+		hasPendingRequests: function(oTable) {
+			if (oTable == null) {
+				return false;
+			}
+
+			if (TableUtils.canUsePendingRequestsCounter(oTable)) {
+				return oTable._iPendingRequests > 0;
+			} else {
+				return oTable._bPendingRequest;
+			}
+		},
+
+		/**
+		 * A counter to determine whether there are pending requests can be used if exactly one dataReceived event is fired for every
+		 * dataRequested event. If this is not the case and there can be an imbalance between dataReceived and dataRequested events, a more limited
+		 * method using a boolean flag must be used.
+		 *
+		 * It is not always possible to correctly determine whether there is a pending request, because the table must use a flag instead of a
+		 * counter. A flag is necessary under the following conditions:
+		 *
+		 * If the AnalyticalBinding is created with the parameter "useBatchRequest" set to false, an imbalance between dataRequested and
+		 * dataReceived events can occur. There will be one dataRequested event for every request that would otherwise be part of a batch
+		 * request. But still only one dataReceived event is fired after all responses are received.
+		 *
+		 * If the ODataTreeBindingFlat adapter is applied to the TreeBinding, the adapter fires a dataRequested event on every call of getNodes,
+		 * even if no request is sent. This can happen if the adapter ignores the request, because it finds out there is a pending request which
+		 * covers it. When a request is ignored no dataReceived event is fired.
+		 *
+		 * @param {sap.ui.table.Table} oTable Instance of the table.
+		 * @returns {boolean} Returns <code>true</code>, if the table can use a counter for pending request detection.
+		 */
+		canUsePendingRequestsCounter: function(oTable) {
+			var oBinding = oTable != null ? oTable.getBinding("rows") : null;
+
+			if (TableUtils.isInstanceOf(oBinding, "sap/ui/model/analytics/AnalyticalBinding")) {
+				return oBinding.bUseBatchRequests;
+			} else if (TableUtils.isInstanceOf(oBinding, "sap/ui/model/TreeBinding")) {
+				return false;
+			}
+
+			return true;
 		},
 
 		/**
@@ -337,21 +475,24 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/core/Control', 'sap/ui/core/ResizeHa
 		 * @private
 		 */
 		getHeaderRowCount : function(oTable) {
-			if (!oTable.getColumnHeaderVisible()) {
-				return 0;
-			}
 
-			var iHeaderRows = 1;
-			var aColumns = oTable.getColumns();
-			for (var i = 0; i < aColumns.length; i++) {
-				if (aColumns[i].shouldRender()) {
-					// only visible columns need to be considered. We don't invoke getVisibleColumns due to
-					// performance considerations. With several dozens of columns, it's quite costy to loop them twice.
-					iHeaderRows = Math.max(iHeaderRows,  aColumns[i].getMultiLabels().length);
+			if (oTable._iHeaderRowCount === undefined) {
+				if (!oTable.getColumnHeaderVisible()) {
+					oTable._iHeaderRowCount = 0;
+				} else {
+					var iHeaderRows = 1;
+					var aColumns = oTable.getColumns();
+					for (var i = 0; i < aColumns.length; i++) {
+						if (aColumns[i].shouldRender()) {
+							// only visible columns need to be considered. We don't invoke getVisibleColumns due to
+							// performance considerations. With several dozens of columns, it's quite costy to loop them twice.
+							iHeaderRows = Math.max(iHeaderRows, aColumns[i].getMultiLabels().length);
+						}
+					}
+					oTable._iHeaderRowCount = iHeaderRows;
 				}
 			}
-
-			return iHeaderRows;
+			return oTable._iHeaderRowCount;
 		},
 
 		/* *

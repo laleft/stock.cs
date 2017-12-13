@@ -20,7 +20,7 @@ sap.ui.define([
 	 * @private
 	 * @sap-restricted
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 */
 	var Connector = function(mParameters) {
 		this._initClientParam();
@@ -35,7 +35,7 @@ sap.ui.define([
 		return new Connector(mParameters);
 	};
 
-	Connector.prototype.DEFAULT_CONTENT_TYPE = "application/json";
+	Connector.prototype.DEFAULT_CONTENT_TYPE = "application/json; charset=utf-8";
 	Connector.prototype._sClient = undefined;
 	Connector.prototype._sLanguage = undefined;
 	Connector.prototype._aSentRequestListeners = [];
@@ -148,6 +148,8 @@ sap.ui.define([
 		var mOptions;
 		if (!sContentType) {
 			sContentType = this.DEFAULT_CONTENT_TYPE;
+		} else if (sContentType.indexOf("charset") === -1) {
+			sContentType += "; charset=utf-8";
 		}
 
 		mOptions = jQuery.extend(true, this._getDefaultHeader(), {
@@ -163,7 +165,7 @@ sap.ui.define([
 			}
 		});
 
-		if (oData && mOptions.contentType === "application/json") {
+		if (oData && mOptions.contentType.indexOf("application/json") === 0) {
 			mOptions.dataType = "json";
 			if (typeof oData === "object") {
 				mOptions.data = JSON.stringify(oData);
@@ -350,18 +352,23 @@ sap.ui.define([
 	 * Loads the changes for the given component class name.
 	 *
 	 * @see sap.ui.core.Component
-	 * @param {String} sComponentClassName - Component class name
-	 * @param {map} mPropertyBag - (optional) contains additional data that are needed for reading of changes
-	 *                           - appDescriptor that belongs to actual component
-	 *                           - siteId that belongs to actual component
-	 *                           - layer up to which changes shall be read (excluding the specified layer)
-	 * @returns {Promise} Returns a Promise with the changes (changes, contexts, optional messagebundle) and componentClassName
+	 * @param {object} oComponent - Contains component data needed for reading changes
+	 * @param {string} oComponent.name - Name of component
+	 * @param {string} [oComponent.appVersion] - Current running version of application
+	 * @param {map} [mPropertyBag] - Contains additional data needed for reading changes
+	 * @param {object} [mPropertyBag.appDescriptor] - Manifest that belongs to actual component
+	 * @param {string} [mPropertyBag.siteId] - <code>sideId<code> that belongs to actual component
+	 * @param {string} [mPropertyBag.layer] - Layer up to which changes shall be read (excluding the specified layer)
+	 * @param {string} [mPropertyBag.appVersion] - Version of application whose changes shall be read
+	 *
+	 * @returns {Promise} Returns a Promise with the changes (changes, contexts, optional messagebundle), <code>componentClassName<code> and <code>etag<code> value
 	 * @public
 	 */
-	Connector.prototype.loadChanges = function(sComponentClassName, mPropertyBag) {
-		var sUri, oPromise;
+	Connector.prototype.loadChanges = function(oComponent, mPropertyBag) {
+		var sUri;
 		var mOptions = {};
 		var that = this;
+		var sComponentClassName = oComponent.name;
 
 		if (!sComponentClassName) {
 			return Promise.reject(new Error("Component name not specified"));
@@ -418,29 +425,47 @@ sap.ui.define([
 		if (sUpToLayer) {
 			sUri += "&upToLayerType=" + sUpToLayer;
 		}
+		if (oComponent.appVersion && (oComponent.appVersion !== FlexUtils.DEFAULT_APP_VERSION)) {
+			sUri += "&appVersion=" + oComponent.appVersion;
+		}
 
 		// Replace first & with ?
 		sUri = sUri.replace("&", "?");
 
-		oPromise = this.send(sUri, undefined, undefined, mOptions);
-		return oPromise.then(function(oResponse) {
-			if (oResponse.response) {
+		return this.send(sUri, undefined, undefined, mOptions)
+			.then(function(oResponse) {
 				return {
 					changes: oResponse.response,
-					messagebundle: oResponse.response.messagebundle,
-					componentClassName: sComponentClassName
+					componentClassName: sComponentClassName,
+					etag: oResponse.etag
 				};
-			} else {
-				return Promise.reject("response is empty");
-			}
-		}, function(oError) {
-			if (oError.code === 404 || oError.code === 405) {
-				// load changes based old route, because new route is not implemented
-				return that._loadChangesBasedOnOldRoute(sComponentClassName);
-			} else {
-				throw (oError);
-			}
-		});
+			}, function(oError) {
+				if (oError.code === 404 || oError.code === 405) {
+					// load changes based old route, because new route is not implemented
+					return that._loadChangesBasedOnOldRoute(sComponentClassName);
+				} else {
+					throw (oError);
+				}
+			});
+	};
+
+	/**
+	 * Loads flexibility settings.
+	 *
+	 * @returns {Promise} Returns a Promise with the flexibility settings content
+	 * @public
+	 */
+	Connector.prototype.loadSettings = function() {
+		var sUri = "/sap/bc/lrep/flex/settings";
+
+		if (this._sClient) {
+			sUri += "?sap-client=" + this._sClient;
+		}
+
+		return this.send(sUri, undefined, undefined, {})
+			.then(function(oResponse) {
+				return oResponse.response;
+			});
 	};
 
 	Connector.prototype._loadChangesBasedOnOldRoute = function(sComponentClassName) {
@@ -492,7 +517,7 @@ sap.ui.define([
 
 		if (this._sLanguage) {
 			// Add mandatory "sap-language" URL parameter.
-			// Only use sap-language if there is a sap-language parameter in the original URL.
+			// Only use sap-language if there is an sap-language parameter in the original URL.
 			// If sap-language is not added, the browser language might be used as back-end login language instead of sap-language.
 			aParams.push({
 				name: "sap-language",

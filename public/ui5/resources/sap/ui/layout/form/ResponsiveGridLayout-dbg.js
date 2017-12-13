@@ -30,7 +30,7 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/layout/Grid', 'sap/ui/layout/GridDat
 	 *
 	 * This control cannot be used stand-alone, it just renders a <code>Form</code>, so it must be assigned to a <code>Form</code> using the <code>layout</code> aggregation.
 	 * @extends sap.ui.layout.form.FormLayout
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -352,7 +352,8 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/layout/Grid', 'sap/ui/layout/GridDat
 
 		FormLayout.prototype.contentOnAfterRendering.apply(this, arguments);
 
-		if (oControl.getWidth && ( !oControl.getWidth() || oControl.getWidth() == "auto" ) && oControl.getMetadata().getName() != "sap.ui.commons.Image") {
+		if (oControl.getWidth && ( !oControl.getWidth() || oControl.getWidth() == "auto" ) &&
+				(!oControl.getFormDoNotAdjustWidth || !oControl.getFormDoNotAdjustWidth())) {
 			oControl.$().css("width", "100%");
 		}
 
@@ -582,6 +583,15 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/layout/Grid', 'sap/ui/layout/GridDat
 			} else {
 				return false;
 			}
+		};
+
+		oGrid.getAriaLabelledBy = function(){
+			var oContainer = sap.ui.getCore().byId(this.__myParentContainerId);
+			if (oContainer && !oContainer.getToolbar() && !oContainer.getTitle() && !oContainer.getExpandable()) {
+				return oContainer.getAriaLabelledBy();
+			}
+
+			return [];
 		};
 
 		// Form factors
@@ -971,7 +981,9 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/layout/Grid', 'sap/ui/layout/GridDat
 
 			var oContainer = sap.ui.getCore().byId(this.__myParentContainerId);
 			var oLayout = this.__myParentLayout;
-			if (oLayout._mainGrid && oLayout._mainGrid.__bIsUsed && !oContainer.getToolbar() && !oContainer.getTitle() && !oContainer.getExpandable()) {
+			if (oLayout._mainGrid && oLayout._mainGrid.__bIsUsed && !oContainer.getToolbar() &&
+					!oContainer.getTitle() && !oContainer.getExpandable() && oContainer.getAriaLabelledBy().length > 0) {
+				// set role only if Title or ariaLabelledBy is set as JAWS 18 has some issues without.
 				return "form";
 			}
 

@@ -5,6 +5,10 @@
 
 .sapUiFup {
 	display: inline-block;
+
+	&.sapUiFupDisabled {
+		pointer-events: none;
+	}
 }
 
 .sapUiFupInp .sapUiFUM {
@@ -22,10 +26,6 @@
 .sapUiFupGroup > div > div {
 	display: table-cell;
 	vertical-align: top;
-}
-
-.sapUiFupGroup > div > div:last-child {
-	padding-left: 1px;
 }
 
 .sapUiFup > form {
@@ -49,9 +49,10 @@
 	bottom: 0;
 	right: 0;
 	overflow: hidden;
-	cursor: pointer;
-	height: 2.5rem;
-	margin-top: 0.25rem;
+}
+
+.sapUiFup.sapUiFupDisabled .sapUiFupInputMask {
+	cursor: default;
 }
 
 .sapUiSizeCompact .sapUiFupInputMask {
@@ -65,7 +66,14 @@
 }
 
 .sapUiFupInputMask > input { /* the real, but hidden file input */
-	display: none;
+	position: absolute;
+	opacity: 0;
+	top: 0px;
+	bottom: 0px;
+	cursor: pointer;
+	left: -4em;       /* avoid the input field behind the file chooser */
+	font-size: 500px; /* to make the field high enough for most themes; for themes with very large fonts this needs to be increased further */
+	width: 5000px;
 }
 
 .sapUiFupInputMask > input[disabled],
@@ -84,7 +92,7 @@ html[data-sap-ui-browser^="cr"] .sapUiFupInputMask > input {
 	float: right;
 }
 
-.sapUiFupGroup > div > div:last-child {
+.sapUiFup:not(.sapUiFupButtonOnly) .sapUiFupGroup > div > div:last-child {
 	padding-left: 4px;
 }
 
@@ -144,8 +152,6 @@ html[data-sap-ui-browser^="cr"] .sapUiFupInputMask > input {
 .sapMFooter-CTX .sapUiFup:hover .sapMBtnHoverable:not(.sapMBtnActive),
 .sapMTB-Transparent-CTX .sapUiFup:hover .sapMBtnInner.sapMBtnHoverable:not(.sapMToggleBtnPressed):not(.sapMBtnEmphasized):not(.sapMBtnAccept):not(.sapMBtnReject):not(.sapMBtnActive) {
 	background-color: @sapUiButtonFooterHoverBackground;
-	color: @sapUiButtonActiveTextColor;
-	text-shadow: @sapUiShadowText;
 }
 
 .sapMFooter-CTX .sapUiFup:hover .sapMBtnHoverable.sapMBtnAccept:not(.sapMBtnActive) {

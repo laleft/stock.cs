@@ -62,7 +62,7 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -250,7 +250,7 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 		this._sCustomTabsButtonsIdPrefix    = '-custom-button-';
 
 		/* setup a name map between the sortItems
-		 aggregation and a sap.m.List with items
+		 aggregation and an sap.m.List with items
 		 the list itself will not be created right now */
 		this._aggregationToListItems("sortItems", {
 			text: {
@@ -299,10 +299,10 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 
 		// sap.ui.core.Popup removes its content on close()/destroy() automatically from the static UIArea,
 		// but only if it added it there itself. As we did that, we have to remove it also on our own
-		if ( this._bAppendedToUIArea ) {
+		if ( this._bAppendedToUIArea && this._dialog ) {
 			var oStatic = sap.ui.getCore().getStaticAreaRef();
 			oStatic = sap.ui.getCore().getUIArea(oStatic);
-			oStatic.removeContent(this, true);
+			oStatic.removeContent(this._dialog, true);
 		}
 
 		// controls that are internally managed and may or may not be assigned to an
@@ -1015,11 +1015,16 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	ViewSettingsDialog.prototype.open = function(sPageId) {
+
 		// add to static UI area manually because we don't have a renderer
+
 		if (!this.getParent() && !this._bAppendedToUIArea) {
 			var oStatic = sap.ui.getCore().getStaticAreaRef();
 			oStatic = sap.ui.getCore().getUIArea(oStatic);
-			oStatic.addContent(this, true);
+			// add as content the Dialog to the Static area and not the ViewSettingsDialog
+			// once the Static area is invalidated, the Dialog will be rendered and not the ViewSettingsDialog which has no renderer
+			// and uses the renderer of the Dialog
+			oStatic.addContent(this._getDialog(), true);
 			this._bAppendedToUIArea = true;
 		}
 
@@ -1044,8 +1049,10 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 			filterCompoundKeys: this.getSelectedFilterCompoundKeys(),
 			navPage : this._getNavContainer().getCurrentPage(),
 			contentPage : this._vContentPage,
-			contentItem : this._oContentItem
+			contentItem : this._oContentItem ? this._oContentItem.clone() : null
 		};
+
+		this.addDependent(this._oPreviousState.contentItem);
 
 		//focus the first focusable item in current page's content
 		if (sap.ui.Device.system.desktop) {
@@ -2760,7 +2767,7 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 	}
 
 	/**
-	 * Gets a sap.m.ViewSettingsItem from a list of items by a given key.
+	 * Gets an sap.m.ViewSettingsItem from a list of items by a given key.
 	 *
 	 * @param aViewSettingsItems The list of sap.m.ViewSettingsItem objects to be searched
 	 * @param sKey
@@ -2783,7 +2790,7 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 	}
 
 	/**
-	 * Finds a sap.m.ViewSettingsItem from a list of items by a given key.
+	 * Finds an sap.m.ViewSettingsItem from a list of items by a given key.
 	 * If it does not succeed logs an error.
 	 *
 	 * @param {sap.m.ViewSettingsItem|string}
@@ -2811,10 +2818,10 @@ function(jQuery, library, Control, IconPool, Toolbar, CheckBox, SearchField, Lis
 	}
 
 	/**
-	 * Checks if the item is a sap.m.ViewSettingsItem.
+	 * Checks if the item is an sap.m.ViewSettingsItem.
 	 *
 	 * @param {*} oItem The item to be validated
-	 * @returns {*|boolean} Returns true if the item is a sap.m.ViewSettingsItem
+	 * @returns {*|boolean} Returns true if the item is an sap.m.ViewSettingsItem
 	 * @private
 	 */
 	function validateViewSettingsItem(oItem) {

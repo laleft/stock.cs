@@ -20,7 +20,7 @@
 .sapFDynamicPageContent {
 	-webkit-flex-grow: 1;
 	flex-grow: 1;
-
+	z-index: 0;
 	background: @sapUiGroupContentBackground;
 }
 
@@ -101,6 +101,8 @@
 	// when content changes above the viewport.
 	// See: https://github.com/WICG/ScrollAnchoring/blob/master/explainer.md
 	overflow-anchor: none;
+
+	overflow-y: auto;
 }
 
 .sapFDynamicPageSupressScroll {
@@ -116,6 +118,10 @@
 }
 
 .sapFDynamicPage .sapFDynamicPageTitleWrapper {
+	display: flex;
+	display: -webkit-flex;
+	flex-direction: column;
+	-webkit-flex-direction: column;
 	flex-shrink: 0;
 	-webkit-flex-shrink: 0;
 }
@@ -141,6 +147,7 @@
 		.sapFDynamicPageActualFooterControl {
 			position: absolute;
 			height: 3rem;
+			width: auto;
 			bottom: 0;
 			right: 0;
 			left: 0;
@@ -178,7 +185,6 @@ html[data-sap-ui-animation='on'] .sapFDynamicPage {
 	}
 	@keyframes bounceShow {
 		0% {
-			-webkit-transform: translateY(100%);
 			transform: translateY(100%);
 			opacity: 0;
 		}
@@ -200,12 +206,10 @@ html[data-sap-ui-animation='on'] .sapFDynamicPage {
 	}
 	@keyframes bounceHide {
 		0% {
-			-webkit-transform: translateY(-5%);
 			transform: translateY(-5%);
 			opacity: 1;
 		}
 		100% {
-			-webkit-transform: translateY(100%);
 			transform: translateY(100%);
 			opacity: 0;
 		}

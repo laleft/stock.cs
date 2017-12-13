@@ -61,28 +61,13 @@ html[data-sap-ui-browser^="ed"].sap-desktop {
 		outline: none;
 	}
 
-	/* to prevent some strange issues on focus -> position texts absolute */
-	.sapUiCalHeadBText {
-		float: none;
-		position: absolute;
-		top: 6px;
-		width: 100%;
-	}
-
-	.sapUiCalHeadBAddText {
-		float: none;
-		position: absolute;
-		left: 0;
-		bottom: 7px;
-	}
-
 	.sapUiCalHead > .sapUiCalHeadB:focus:after {
 		position: absolute;
 		top: 2px;
 		left: 2px;
 		right: 2px;
 		bottom: 2px;
-		border: 1px dotted @sapUiContentFocusColor;
+		border: 1px dashed @sapUiContentFocusColor;
 		content: "";
 	}
 
@@ -660,21 +645,27 @@ html.sap-desktop .sapUiCalendarApp.sapUiCalendarAppSel:hover:not(:active)  > .sa
 .calendarRowTypeColorMixIn(sapUiCalendarAppType10, sapUiCalendarRowAppsIntHeadType10 , @_sap_ui_unified_CalendarRow_sapUiCalendarAppType10, @_sap_ui_unified_CalendarRow_sapUiCalendarRowAppsIntHeadType10);
 /* END "CalendarRow.less" */
 
-/* START "ContentSwitcher.less" */
-/* =============================================== */
-/* CSS for control sap.ui.unified/ContentSwitcher  */
-/* Belize theme                                    */
-/* =============================================== */
+/* START "ColorPicker.less" */
+/* =========================================== */
+/* CSS for control sap.ui.commons/ColorPicker  */
+/* Belize theme                                */
+/* =========================================== */
 
-/* BUILD ME!!!! */
-/* END "ContentSwitcher.less" */
+.sapUiColorPicker-ColorPickerSlider.sapUiSliHori .sapUiSliBar,
+.sapUiColorPicker-ColorPickerSlider.sapUiSliHori .sapUiSliBar .sapUiSliHiLi
+	{
+	border: none;
+	background-color: transparent;
+}
 
-/* START "Currency.less" */
-/* ======================================== */
-/* CSS for control sap.ui.unified/Currency  */
-/* Belize theme                             */
-/* ======================================== */
-/* END "Currency.less" */
+.sapUiColorPicker-ColorPickerAlphaSlider.sapUiSliHori .sapUiSliBar,
+.sapUiColorPicker-ColorPickerAlphaSlider.sapUiSliHori .sapUiSliBar .sapUiSliHiLi
+	{
+	border: none;
+	background-color: transparent;
+}
+
+/* END "ColorPicker.less" */
 
 /* START "FileUploader.less" */
 /* ============================================ */
@@ -769,13 +760,6 @@ html[data-sap-ui-browser^="ie"] {
 }
 /* END "Menu.less" */
 
-/* START "Shell.less" */
-/* ===================================== */
-/* CSS for control sap.ui.unified/Shell  */
-/* Belize theme                          */
-/* ===================================== */
-/* END "Shell.less" */
-
 /* START "ShellHeader.less" */
 /* =========================================== */
 /* CSS for control sap.ui.unified/ShellHeader  */
@@ -810,10 +794,8 @@ html.sapUiMedia-Std-Desktop .sapUiUfdShellHeadUsrItm:hover:active > *,
 /* Belize theme                                */
 /* =========================================== */
 
-@sapUiUfdShellCurtainBGStartColor: fade(@sapUiGroupContentBackground,97);
-@sapUiUfdShellCurtainBGEndColor: fade(lighten(desaturate(@sapUiHighlight,37),56),97);
-@sapUiUfdShellCurtainBGStartColor_IE: fade(@sapUiGroupContentBackground, 100);
-@sapUiUfdShellCurtainBGEndColor_IE: fade(lighten(desaturate(@sapUiHighlight,37),56),100); /*#e5f2f9*/
+@sap_ui_unified_ShellLayout_CurtainBGStartColor: fade(@sapUiGroupContentBackground,97);
+@sap_ui_unified_ShellLayout_CurtainBGEndColor: fade(lighten(desaturate(@sapUiHighlight,37),56),97);
 
 ._sapUiUfdShellSubHdr { /* Testpage only */
 	background-color: @sapUiShellBackground;
@@ -825,7 +807,7 @@ html.sapUiMedia-Std-Desktop .sapUiUfdShellHeadUsrItm:hover:active > *,
 }
 
 .sapUiUfdShell .sapUiUfdShellBrand {
-	background: transparent;
+	background: @sapUiShellBackground;
 }
 
 .sapUiUfdShell.sapUiUfdShellCurtainVisible .sapUiUfdShellHead,
@@ -837,8 +819,8 @@ html.sapUiMedia-Std-Desktop .sapUiUfdShellHeadUsrItm:hover:active > *,
 
 .sapUiUfdShellCurtain {
 	border-bottom: 1px solid @sapUiShellBorderColor;
-	background-image: linear-gradient(to bottom, @sapUiUfdShellCurtainBGStartColor 0%, @sapUiUfdShellCurtainBGEndColor 100%);
-	background-image: -webkit-linear-gradient(top, @sapUiUfdShellCurtainBGStartColor 0%, @sapUiUfdShellCurtainBGEndColor 100%);
+	background-image: linear-gradient(to bottom, @sap_ui_unified_ShellLayout_CurtainBGStartColor 0%, @sap_ui_unified_ShellLayout_CurtainBGEndColor 100%);
+	background-image: -webkit-linear-gradient(top, @sap_ui_unified_ShellLayout_CurtainBGStartColor 0%, @sap_ui_unified_ShellLayout_CurtainBGEndColor 100%);
 	background-attachment: fixed;
 	background-repeat: repeat, no-repeat;
 }

@@ -12,6 +12,11 @@ sap.ui.define([
 				//this._setToggleButtonTooltip(!sap.ui.Device.system.desktop);
 				this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
 				this.getOwnerComponent().getRouter().attachRouteMatched(this.onRouteMatched, this);
+
+				var viewId = this.getView().getId();
+				var toolPage = sap.ui.getCore().byId(viewId + "--toolPage");
+	
+				toolPage.setSideExpanded(false);
 			},
 
 			onRouteMatched: function () {
@@ -44,6 +49,14 @@ sap.ui.define([
 				// 	this.getRouter().navTo(sKey);
 				// }
                 this.getRouter().navTo(sKey);
+			},
+
+			onSideNavButtonPress : function() {
+				var viewId = this.getView().getId();
+				var toolPage = sap.ui.getCore().byId(viewId + "--toolPage");
+				var sideExpanded = toolPage.getSideExpanded();
+	
+				toolPage.setSideExpanded(!toolPage.getSideExpanded());
 			},
 
 		});

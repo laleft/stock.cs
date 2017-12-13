@@ -6,6 +6,7 @@
 		title="{config>/title}"
 		search="handleSearch"
 		confirm="handleClose"
+		updateModelAlways="true"
 		close="handleClose"
 		items="{
 			path: 'data>/'

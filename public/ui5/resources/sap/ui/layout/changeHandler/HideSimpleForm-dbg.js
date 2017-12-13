@@ -14,7 +14,7 @@ sap.ui.define([
 	 * Change handler for hiding of a control.
 	 * @alias sap.ui.fl.changeHandler.HideControl
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 * @experimental Since 1.27.0
 	 */
 	var HideForm = { };
@@ -60,7 +60,7 @@ sap.ui.define([
 		// this is needed to trigger a refresh of a simpleform! Otherwise simpleForm content and visualization are not in sync
 		oModifier.removeAllAggregation(oControl, "content");
 		for (var i = 0; i < aContent.length; ++i) {
-			oModifier.insertAggregation(oControl, "content", aContent[i], i);
+			oModifier.insertAggregation(oControl, "content", aContent[i], i, oView);
 		}
 
 		if (oChangeDefinition.changeType === "hideSimpleFormField") {
@@ -148,6 +148,7 @@ sap.ui.define([
 		if (oSpecificChangeInfo.removedElement && oSpecificChangeInfo.removedElement.id) {
 			var oStableElement = this._getStableElement(sap.ui.getCore().byId(oSpecificChangeInfo.removedElement.id));
 			oChange.content.elementSelector = JsControlTreeModifier.getSelector(oStableElement, mPropertyBag.appComponent);
+			oChangeWrapper.addDependentControl(oStableElement, "elementSelector", mPropertyBag);
 		} else {
 			throw new Error("oSpecificChangeInfo.removedElement.id attribute required");
 		}

@@ -19,7 +19,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	 * @extends sap.m.ComboBoxBase
 	 *
 	 * @author SAP SE
-	 * @version 1.46.7
+	 * @version 1.48.13
 	 *
 	 * @constructor
 	 * @public
@@ -185,6 +185,48 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	};
 
 	/**
+	 * Handles the <code>onsapshow</code> event when either F4 is pressed or Alt + Down arrow are pressed.
+	 *
+	 * @param {jQuery.Event} oEvent The event object.
+	 */
+	MultiComboBox.prototype.onsapshow = function(oEvent) {
+		var oList = this.getList(),
+			oPicker = this.getPicker(),
+			aSelectableItems = this.getSelectableItems(),
+			aSelectedItems = this.getSelectedItems(),
+			oItemToFocus, oItemNavigation = oList.getItemNavigation(),
+			iItemToFocus, oCurrentFocusedControl;
+
+		oCurrentFocusedControl = jQuery(document.activeElement).control()[0];
+
+		if (oCurrentFocusedControl instanceof sap.m.Token) {
+			oItemToFocus = this._getItemByToken(oCurrentFocusedControl);
+		} else {
+			// we need to take the list's first selected item not the first selected item by the combobox user
+			oItemToFocus = aSelectedItems.length ? this._getItemByListItem(this.getList().getSelectedItems()[0]) : aSelectableItems[0];
+		}
+
+		iItemToFocus = this.getItems().indexOf(oItemToFocus);
+
+		if (oItemNavigation) {
+			oItemNavigation.setSelectedIndex(iItemToFocus);
+		} else {
+			this._bListItemNavigationInvalidated = true;
+			this._iInitialItemFocus = iItemToFocus;
+		}
+
+		oPicker.setInitialFocus(oList);
+		ComboBoxBase.prototype.onsapshow.apply(this, arguments);
+	};
+
+	/**
+	 * Handles when Alt + Up arrow are pressed.
+	 *
+	 * @param {jQuery.Event} oEvent The event object.
+	 */
+	MultiComboBox.prototype.onsaphide = MultiComboBox.prototype.onsapshow;
+
+	/**
 	 * Handles the item selection when user triggers an item selection via key press (TAB, ENTER etc.).
 	 *
 	 * @param {jQuery.Event} oEvent The key event object.
@@ -290,6 +332,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	 */
 	MultiComboBox.prototype.onsapfocusleave = function(oEvent) {
 		var oPicker = this.getAggregation("picker");
+		var bTablet = this.isPlatformTablet();
 		var oControl = sap.ui.getCore().byId(oEvent.relatedControlId);
 		var oFocusDomRef = oControl && oControl.getFocusDomRef();
 
@@ -303,7 +346,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 		}
 
 		if (oPicker && oFocusDomRef) {
-			if (jQuery.sap.equal(oPicker.getFocusDomRef(), oFocusDomRef)) {
+			if (jQuery.sap.equal(oPicker.getFocusDomRef(), oFocusDomRef) && !bTablet && !this.isPickerDialog()) {
 				// force the focus to stay in the MultiComboBox field when scrollbar
 				// is moving
 				this.focus();
@@ -319,11 +362,17 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	 * @private
 	 */
 	MultiComboBox.prototype.onfocusin = function(oEvent) {
+
+		var bDropdownPickerType = this.getPickerType() === "Dropdown";
+
 		if (oEvent.target === this.getFocusDomRef()) {
 			this.getEditable() && this.addStyleClass("sapMMultiComboBoxFocus");
 		}
 
-		if (oEvent.target === this.getOpenArea()) {
+		if (oEvent.target === this.getOpenArea() && bDropdownPickerType && !this.isPlatformTablet()) {
+			// avoid the text-editing mode popup to be open on mobile,
+			// text-editing mode disturbs the usability experience (it blocks the UI in some devices)
+
 			// force the focus to stay in the input field
 			this.focus();
 		}
@@ -332,6 +381,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 		if (!this.isOpen() && this.shouldValueStateMessageBeOpened()) {
 			this.openValueStateMessage();
 		}
+
 	};
 
 	/**
@@ -670,6 +720,11 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	 */
 	MultiComboBox.prototype.onAfterOpen = function() {
 
+		// reset the initial focus back to the input
+		if (!this.isPlatformTablet()) {
+			this.getPicker().setInitialFocus(this);
+		}
+
 		// close error message when the list is open, otherwise the list can be covered by the message
 		this.closeValueStateMessage();
 	};
@@ -750,19 +805,11 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	 * @returns {sap.m.Popover}
 	 * @private
 	 */
-	MultiComboBox.prototype.createPopover = function() {
-		var oPopup = new Popover({
-			showArrow: false,
-			placement: sap.m.PlacementType.Vertical,
-			offsetX: 0,
-			offsetY: 0,
-			initialFocus: this,
-			bounce: false,
-			ariaLabelledBy: this.getPickerInvisibleTextId() || undefined
-		});
-
-		this._decoratePopover(oPopup);
-		return oPopup;
+	MultiComboBox.prototype.createDropdown = function() {
+		var oDropdown = new Popover(this.getDropdownSettings());
+		oDropdown.setInitialFocus(this);
+		this._decoratePopover(oDropdown);
+		return oDropdown;
 	};
 
 	MultiComboBox.prototype.createDialog = function () {
@@ -770,7 +817,6 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 			oSelectAllButton = this._createFilterSelectedButton();
 
 		oDialog.getSubHeader().addContent(oSelectAllButton);
-
 		return oDialog;
 	};
 
@@ -791,7 +837,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	};
 
 	MultiComboBox.prototype._getFilterSelectedButton = function () {
-		return this.getPicker().getSubHeader().getContent()[1];
+			return this.getPicker().getSubHeader().getContent()[1];
 	};
 
 	/**
@@ -847,7 +893,8 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 		.attachItemPress(this._handleItemPress, this);
 
 		this._oList.addEventDelegate({
-			onAfterRendering: this.onAfterRenderingList
+			onAfterRendering: this.onAfterRenderingList,
+			onfocusin: this.onFocusinList
 		}, this);
 	};
 
@@ -1490,6 +1537,18 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 		}
 	};
 
+	/**
+	 * As the ItemNavigation of the list is created onfocusin we need handle this and set some initial root focus dome ref
+	 *
+	 * @private
+	 */
+	MultiComboBox.prototype.onFocusinList = function() {
+		if (this._bListItemNavigationInvalidated) {
+			this.getList().getItemNavigation().setSelectedIndex(this._iInitialItemFocus);
+			this._bListItemNavigationInvalidated = false;
+		}
+	};
+
 	MultiComboBox.prototype.onAfterRendering = function() {
 		ComboBoxBase.prototype.onAfterRendering.apply(this, arguments);
 
@@ -1553,7 +1612,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 	};
 
 	/**
-	 * Function is called on keyboard backspace, if cursor is in front of an token, token gets selected and deleted
+	 * Function is called on keyboard backspace, if cursor is in front of a token, token gets selected and deleted
 	 *
 	 * @private
 	 * @param {jQuery.event} oEvent
@@ -1613,7 +1672,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 
 		if (!oFocusedElement) {
 
-			// we cannot rule out that the focused element does not correspond to a SAPUI5 control in which case oFocusedElement
+			// we cannot rule out that the focused element does not correspond to an SAPUI5 control in which case oFocusedElement
 			// is undefined
 			return;
 		}
@@ -2341,7 +2400,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 		var sValue = oEvent.target.value,
 			aItems, bVisibleItemFound,
 			aItemsToCheck, bResetFilter,
-			sUpdateValue;
+			sUpdateValue, oSelectedButton;
 
 		// "compositionstart" and "compositionend" are native events and don't have srcControl
 		var oInput = bCompositionEvent ? jQuery(oEvent.target).control(0) : oEvent.srcControl;
@@ -2364,9 +2423,13 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 		aItemsToCheck = this.getEnabledItems();
 		bResetFilter = this._sOldInput && this._sOldInput.length > sValue.length;
 
-		if (bResetFilter && (this.isPickerDialog() && this._getFilterSelectedButton().getPressed())){
-			aItemsToCheck = this.getSelectedItems();
-		} else if (bResetFilter) {
+		if (this.isPickerDialog()) {
+			oSelectedButton = this._getFilterSelectedButton();
+			if (oSelectedButton != null && oSelectedButton.getPressed()) {
+				oSelectedButton.setPressed(false);
+			}
+		}
+		if (bResetFilter) {
 			aItemsToCheck = this.getItems();
 		}
 
@@ -2394,6 +2457,12 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 		 */
 		this.bItemsUpdated = false;
 
+		// To detect whether the List's item navigation is inited
+		this._bListItemNavigationInvalidated = false;
+
+		// Defines the initial selected index of List's item navigation
+		this._iInitialItemFocus = -1;
+
 		/**
 		 * To detect whether a checkbox or an item body is clicked.
 		 *
@@ -2402,7 +2471,7 @@ sap.ui.define(['jquery.sap.global', './Bar', './InputBase', './ComboBoxTextField
 
 		// determines if value of the combobox should be empty string after popup's close
 		this._bPreventValueRemove = false;
-		this.setPickerType(sap.ui.Device.system.phone ? "Dialog" : "Popover");
+		this.setPickerType(sap.ui.Device.system.phone ? "Dialog" : "Dropdown");
 		this._oTokenizer = this._createTokenizer();
 		this._aCustomerKeys = [];
 		this._aInitiallySelectedItems = [];

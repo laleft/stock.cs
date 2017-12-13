@@ -17,9 +17,10 @@ sap.ui.define(['jquery.sap.global', './Dialog', './Popover', './SelectList', './
 		 * @class
 		 * The <code>sap.m.Select</code> control provides a list of items that allows users to select an item.
 		 * @extends sap.ui.core.Control
+		 * @implements sap.ui.core.IFormContent
 		 *
 		 * @author SAP SE
-		 * @version 1.46.7
+		 * @version 1.48.13
 		 *
 		 * @constructor
 		 * @public
@@ -28,6 +29,7 @@ sap.ui.define(['jquery.sap.global', './Dialog', './Popover', './SelectList', './
 		 */
 		var Select = Control.extend("sap.m.Select", /** @lends sap.m.Select.prototype */ {
 			metadata: {
+				interfaces: ["sap.ui.core.IFormContent"],
 				library: "sap.m",
 				properties: {
 
@@ -581,8 +583,7 @@ sap.ui.define(['jquery.sap.global', './Dialog', './Popover', './SelectList', './
 				}
 			}
 
-			// remove the active and expanded states of the field
-			this.removeStyleClass(CSS_CLASS + "Pressed");
+			// remove the expanded states of the field
 			this.removeStyleClass(CSS_CLASS + "Expanded");
 		};
 
@@ -591,11 +592,16 @@ sap.ui.define(['jquery.sap.global', './Dialog', './Popover', './SelectList', './
 		 *
 		 */
 		Select.prototype.onAfterClose = function(oControlEvent) {
-			var oDomRef = this.getFocusDomRef();
+			var oDomRef = this.getFocusDomRef(),
+				CSS_CLASS = this.getRenderer().CSS_CLASS,
+				sPressedCSSClass = CSS_CLASS + "Pressed";
 
 			if (oDomRef) {
 				oDomRef.setAttribute("aria-expanded", "false");
 			}
+
+			// Remove the active state
+			this.removeStyleClass(sPressedCSSClass);
 		};
 
 		/**
