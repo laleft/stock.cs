@@ -14,9 +14,12 @@ class ArticuloController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Articulo::all();
+        $articulos = DB::table('articulos')->paginate(10);
+        
+        return view('articulo', ['articulos' => $articulos]); 
+        
     }
 
     /**
@@ -140,13 +143,16 @@ class ArticuloController extends Controller
 
     public function filtrar(Request $request)
     {
+        if($request->get('id_marca'))
+        {
+            return Articulo::with('marca', 'marca.categoria')->where('id_marca', $request->get('id_marca'))->get();
+        }
+        
         $articulos = DB::table('articulos')
         ->join('marcas', 'marcas.id_marca', '=', 'articulos.id_marca')
         ->join('categorias', 'categorias.id_categoria', '=', 'marcas.id_categoria')
         ->where('categorias.id_categoria', '=', $request->input('id_categoria'))
         ->get();
-
-        \Debugbar::info($articulos);
 
         return $articulos;
     }
