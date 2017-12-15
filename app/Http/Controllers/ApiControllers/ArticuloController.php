@@ -15,10 +15,29 @@ class ArticuloController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(Request $request, Articulo $articulo)
     {
-        //return Articulo::all();        
-        return Articulo::paginate(25);
+        $articulos = $articulo->newQuery();
+
+        if( $request->has('id_marca') ) {
+
+            $articulos->where('id_marca', $request->get('id_marca'));
+
+        }
+
+        if( $request->has('id_categoria') ) {
+
+            $articulos->where('id_categoria', $request->get('id_categoria'));
+        }
+
+        if( $request->has('stock_bajo') ) {
+
+            if( $request->get('stock_bajo') == 'true' )
+                $articulos->where('stock_actual', '<=', 'stock_minimo');
+        }
+        
+        return $articulos->paginate(1000);
+
     }
 
     /**

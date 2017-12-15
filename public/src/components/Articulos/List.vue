@@ -10,6 +10,7 @@
       :data="articulos"
       style="width: 100%"
       height="500"
+      fixed="true"
       highlight-current-row
       @current-change="handleSelectRow">
       <el-table-column
