@@ -21,6 +21,7 @@ Route::get('articulo/filtrar', 'ArticuloController@filtrar');
 Route::get('articulo/buscar/{articulo?}', 'ArticuloController@buscar');
 Route::get('categoria/listar/{categoria?}/{pagesize?}', 'CategoriaController@listar');
 Route::resource('articulo', 'ApiControllers\ArticuloController');
+Route::resource('movimientos-stock', 'ApiControllers\MovimientosStockController');
 Route::resource('marca', 'MarcaController');
 Route::resource('categoria', 'CategoriaController', ['only' => [
     'index'

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ApiControllers;
 use App\Http\Controllers\Controller;
 use App\Articulo;
 use App\Categoria;
+use App\MovimientosStock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +16,15 @@ class ArticuloController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
     public function index(Request $request, Articulo $articulo)
     {
         $articulos = $articulo->newQuery();
+
+        if( $request->has('id_articulo') )
+        {
+            return $articulos->with('marca')->with('categoria')->where('id_articulo', $request->get('id_articulo'))->first();
+        }
 
         if( $request->has('id_marca') ) {
 
@@ -33,10 +40,17 @@ class ArticuloController extends Controller
         if( $request->has('stock_bajo') ) {
 
             if( $request->get('stock_bajo') == 'true' )
-                $articulos->where('stock_actual', '<=', 'stock_minimo');
+                $articulos->whereColumn('stock_actual', '<=', 'stock_minimo');
         }
-        
-        return $articulos->paginate(1000);
+
+        if( $request->has('buscar') )
+        {
+            $articulos->where('descripcion', 'LIKE', '%'.$request->get('buscar').'%');
+        }
+
+        $articulos->with('marca')->with('categoria');
+
+        return $articulos->paginate($request->get('page_size'));
 
     }
 
@@ -67,7 +81,7 @@ class ArticuloController extends Controller
             $marca->save();
             $id_marca = $marca->id_marca;
 
-            
+
         }
         else
         {
@@ -100,7 +114,8 @@ class ArticuloController extends Controller
     public function store(Request $request)
     {
         try{
-            Articulo::create($request->all());
+            $articulo = Articulo::create($request->all());
+            $movimientos = MovimientosStock::create(['id_articulo' => $articulo->id_articulo, 'fecha_movimiento' => $articulo->created_at, 'stock_ingreso' => $articulo->stock_actual]);
             return 'TODO OK';
         } catch( \Illuminate\Database\QueryException $e) {
                 return response()->json(array('mensaje' => $e->errorInfo[2]), 500);
@@ -136,9 +151,14 @@ class ArticuloController extends Controller
      * @param  \App\Articulo  $articulo
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Articulo $articulo)
+    public function update(Request $request, Articulo $articulo, MovimientosStock $movimientosStock)
     {
-        //
+        try {
+            $articulo->update($request->all());
+            return 'ACTUALIZADO';
+        } catch( \Illuminate\Database\QueryException $e) {
+            return response()->json(array('mensaje' => $e->errorInfo[2]), 500);
+        }
     }
 
     /**
@@ -147,9 +167,14 @@ class ArticuloController extends Controller
      * @param  \App\Articulo  $articulo
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Articulo $articulo)
+    public function destroy(Request $request, Articulo $articulo)
     {
-        //
+        if($articulo)
+        {
+            $articulo->movimientos_stock()->delete();
+            $articulo->delete();
+            return $articulo;
+        }
     }
 
     public function buscar($articulo)
@@ -169,7 +194,7 @@ class ArticuloController extends Controller
         {
             return Articulo::with('marca', 'marca.categoria')->where('id_marca', $request->get('id_marca'))->get();
         }
-        
+
         $articulos = DB::table('articulos')
         ->join('marcas', 'marcas.id_marca', '=', 'articulos.id_marca')
         ->join('categorias', 'categorias.id_categoria', '=', 'marcas.id_categoria')

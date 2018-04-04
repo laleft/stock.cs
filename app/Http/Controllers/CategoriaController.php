@@ -7,17 +7,24 @@ use App\Categoria;
 
 class CategoriaController extends Controller
 {
-    public function index(Request $request)
-    {   
+    public function index(Request $request, Categoria $categoria)
+    {
 
-        $id_marca = $request->get('id_marca');
-        if($id_marca)
+        // $id_marca = $request->get('id_marca');
+        // if($id_marca)
+        // {
+        //     $id_categoria = \App\Marca::select('id_categoria')->where('id_marca', $id_marca)->first();
+        //     return Categoria::where('id_categoria', $id_categoria->id_categoria)->first();
+        // }
+
+        $categorias = $categoria->newQuery();
+
+        if($request->has('buscar'))
         {
-            $id_categoria = \App\Marca::select('id_categoria')->where('id_marca', $id_marca)->first();
-            return Categoria::where('id_categoria', $id_categoria->id_categoria)->first();
+          $categorias->where('categoria', 'LIKE', '%'.$request->get('buscar').'%');
         }
-        
-        return Categoria::orderBy('categoria', 'ASC')->get();
+
+        return $categorias->orderBy('categoria', 'ASC')->get();
     }
 
     public function show(Categoria $categoria)

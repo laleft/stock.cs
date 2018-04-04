@@ -12,12 +12,22 @@ class MarcaController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(Request $request, Marca $marca)
     {
-        if($request->get('id_categoria'))
+        $marca = $marca->newQuery();
+
+        if($request->has('buscar'))
+        {
+            $marca->where('marca', 'LIKE', '%'.$request->get('buscar').'%');
+
+            return $marca->orderBy('marca', 'ASC')->get();
+        }
+
+        if($request->has('id_categoria'))
         {
             return Marca::where('id_categoria', $request->get('id_categoria'))->get();
         }
+
         return Marca::all();
     }
 

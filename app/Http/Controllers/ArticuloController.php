@@ -17,9 +17,9 @@ class ArticuloController extends Controller
     public function index(Request $request)
     {
         $articulos = DB::table('articulos')->paginate(10);
-        
-        return view('articulo', ['articulos' => $articulos]); 
-        
+
+        return view('articulo', ['articulos' => $articulos]);
+
     }
 
     /**
@@ -50,7 +50,7 @@ class ArticuloController extends Controller
             $marca->save();
             $id_marca = $marca->id_marca;
 
-            
+
         }
         else
         {
@@ -147,7 +147,7 @@ class ArticuloController extends Controller
         {
             return Articulo::with('marca', 'marca.categoria')->where('id_marca', $request->get('id_marca'))->get();
         }
-        
+
         $articulos = DB::table('articulos')
         ->join('marcas', 'marcas.id_marca', '=', 'articulos.id_marca')
         ->join('categorias', 'categorias.id_categoria', '=', 'marcas.id_categoria')
