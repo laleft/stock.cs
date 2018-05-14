@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use DB;
 use Config;
 use App\Marca;
@@ -27,18 +26,18 @@ class ImportarController extends Controller
 
     }
 
-    public function importarDatos($rutaArchivo = null) 
+    public function importarDatos($rutaArchivo = null)
     {
-        $rutaArchivo = 'articulos-prueba.csv';
-       
+        //$rutaArchivo = 'articulos-1m.csv';
+
         if ( !$rutaArchivo ) return null;
-        
+
         $archivo = fopen($rutaArchivo, 'r');
 
         $flagPrimeraLinea = true;
 
         while( ($linea = fgetcsv($archivo, 4096, ';')) !== FALSE ) {
-            
+
             if($flagPrimeraLinea) {
                 $flagPrimeraLinea = false;
                 continue;
@@ -46,16 +45,20 @@ class ImportarController extends Controller
 
             $nombreCategoria = utf8_encode($linea[2]);
             $nombreMarca = utf8_encode($linea[3]);
-            $codigoArticulo = str_pad(trim($linea[0]), 5, '0', STR_PAD_LEFT);
+            $codigoArticulo = $linea[0];
             $descripcionArticulo = utf8_encode($linea[1]);
             $ivaArticulo = trim($linea[5]);
             $valivaArticulo = floatval(str_replace(',', '.', $linea[6]));
             $costoArticulo = floatval(str_replace(',', '.', $linea[4]));
+            $coeficiente_ganancia_min = floatval(str_replace(',', '.', $linea[10]));
+            $coeficiente_ganancia_may = floatval(str_replace(',', '.', $linea[11]));
             $minorisArticulo = floatval(str_replace(',', '.', $linea[12]));
             $minorisiArticulo = floatval(str_replace(',', '.', $linea[13]));
             $mayorisArticulo = floatval(str_replace(',', '.', $linea[14]));
-            $mayorisiArticulo = floatval(str_replace(',', '.', $linea[15]));            
-            
+            $mayorisiArticulo = floatval(str_replace(',', '.', $linea[15]));
+
+            //$almacen = $linea[5];
+
             $id_categoria = null;
 
             if(!Categoria::where('categoria', $nombreCategoria)->exists())
@@ -66,7 +69,11 @@ class ImportarController extends Controller
 
                 $id_categoria = $nuevaCategoria->id_categoria;
             }
-            
+            else
+            {
+                $categoria = Categoria::where('categoria', $nombreCategoria)->first();
+                $id_categoria = $categoria->id_categoria;
+            }
             $id_marca = null;
 
             if(!Marca::where('marca', $nombreMarca)->exists())
@@ -81,18 +88,18 @@ class ImportarController extends Controller
                 $nuevaMarca->marca = $nombreMarca;
                 $nuevaMarca->id_categoria = $id_categoria;
                 $nuevaMarca->save();
-                
+
                 $id_marca = $nuevaMarca->id_marca;
             }
 
-            if(!Articulo::where('codigo', $codigoArticulo)->exists())
+            if($id_marca == null)
             {
-                if($id_marca == null)
-                {
-                    $marca = Marca::where('marca', $nombreMarca)->first();
-                    $id_marca = $marca->id_marca;
-                }
+                $marca = Marca::where('marca', $nombreMarca)->first();
+                $id_marca = $marca->id_marca;
+            }
 
+            try
+            {
                 $nuevoArticulo = new Articulo;
                 $nuevoArticulo->codigo = $codigoArticulo;
                 $nuevoArticulo->descripcion = $descripcionArticulo;
@@ -100,16 +107,30 @@ class ImportarController extends Controller
                 $nuevoArticulo->iva_valor = $valivaArticulo;
                 $nuevoArticulo->costo = $costoArticulo;
                 $nuevoArticulo->precio_minorista = $minorisArticulo;
+                $nuevoArticulo->precio_minorista_final = $minorisiArticulo;
                 $nuevoArticulo->precio_mayorista = $mayorisArticulo;
-                $nuevoArticulo->coeficiente_ganancia_1 = 0;
-                $nuevoArticulo->coeficiente_ganancia_2 = 0;
+                $nuevoArticulo->precio_mayorista_final = $mayorisiArticulo;
+                $nuevoArticulo->coeficiente_ganancia_1 = $coeficiente_ganancia_min;
+                $nuevoArticulo->coeficiente_ganancia_2 = $coeficiente_ganancia_may;
                 $nuevoArticulo->stock_actual = NULL;
+                $nuevoArticulo->id_categoria = $id_categoria;
                 $nuevoArticulo->id_marca = $id_marca;
+//            $nuevoArticulo->id_almacen = $almacen;
                 $nuevoArticulo->save();
             }
-           
-        }        
-        
+            catch (\Exception $exception)
+            {
+                $errores[] = $exception;
+            }
+        }
+        echo "\n";
+        echo 'La importacion finalizo con los siguientes errores: ';
+        echo "\n";
+        foreach( $errores as $error ) {
+            echo $error->getMessage();
+            echo "\n";
+        }
+
     }
 
 

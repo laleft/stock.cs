@@ -29,3 +29,5 @@ Route::get('/importar', 'ImportarController@importarDatos');
 Route::get('/importar/test', 'ImportarController@test');
 Route::get('/articulo/buscar/categoria', 'ArticuloController@buscarCategorias');
 Route::get('/importar-excel', 'ImportarExcelController@importar');
+Route::get('/reportes/articulo', 'ReportsControllers\ArticuloController@index');
+Route::get('/articulo/imprimir', 'ArticuloController@imprimir');

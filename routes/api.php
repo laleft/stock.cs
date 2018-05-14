@@ -26,3 +26,4 @@ Route::resource('marca', 'MarcaController');
 Route::resource('categoria', 'CategoriaController', ['only' => [
     'index'
 ]]);
+Route::resource('almacen', 'ApiControllers\AlmacenController');

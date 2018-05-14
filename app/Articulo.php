@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Articulo extends Model
 {
     protected $primaryKey = 'id_articulo';
-    protected $fillable = ['codigo', 'descripcion', 'iva_tipo', 'iva_valor', 'costo', 'coeficiente_ganancia_1', 'coeficiente_ganancia_2', 'precio_minorista', 'precio_mayorista', 'stock_actual', 'stock_minimo', 'alarma_stock', 'id_deposito', 'id_marca', 'id_categoria','created_at', 'updated_at'];
+    protected $fillable = ['codigo', 'descripcion', 'iva_tipo', 'iva_valor', 'costo', 'coeficiente_ganancia_1', 'coeficiente_ganancia_2', 'precio_minorista', 'precio_minorista_final', 'precio_mayorista', 'precio_mayorista_final', 'stock_actual', 'stock_minimo', 'alarma_stock', 'id_almacen', 'id_marca', 'id_categoria','created_at', 'updated_at'];
     protected $appends = ['_rowVariant'];
 
     public function marca()
@@ -59,7 +59,7 @@ class Articulo extends Model
             return $query;
         }
 
-        
+
 
     }
 }

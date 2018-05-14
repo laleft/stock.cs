@@ -130,6 +130,26 @@ class ArticuloController extends Controller
         //
     }
 
+    public function imprimir(Request $request)
+    {
+      $consulta = Articulo::where('id_categoria', '=', '33');
+      $consulta->with(['categoria', 'marca']);
+      $coleccion = $consulta->get();
+      $articulos = $coleccion->groupBy(['categoria.categoria', 'marca.marca'])->toArray();
+      // foreach ($arreglo as $key => $value) {
+      //   echo $key . '<br/>';
+      //   foreach ($value as $key => $value) {
+      //     echo $key . '<br/>';
+      //     foreach ($value as $key => $value) {
+      //       echo $value['descripcion'] . '<br/>';
+      //     }
+      //   }
+      // }
+      $pdf = \PDF::loadView('reportes.articulos.lista', compact('articulos'));
+      return $pdf->stream();
+
+    }
+
     public function buscar($articulo)
     {
         $articulos = Articulo::Buscar($articulo);

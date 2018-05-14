@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ApiControllers;
 use App\Http\Controllers\Controller;
 use App\Articulo;
 use App\Categoria;
+use App\Marca;
 use App\MovimientosStock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -43,6 +44,10 @@ class ArticuloController extends Controller
                 $articulos->whereColumn('stock_actual', '<=', 'stock_minimo');
         }
 
+        if( $request->has('id_almacen') ) {
+            $articulos->whereIn('id_almacen', $request->get('id_almacen'));
+        }
+
         if( $request->has('buscar') )
         {
             $articulos->where('descripcion', 'LIKE', '%'.$request->get('buscar').'%');
@@ -50,7 +55,20 @@ class ArticuloController extends Controller
 
         $articulos->with('marca')->with('categoria');
 
-        return $articulos->paginate($request->get('page_size'));
+        $articulos->orderBy('descripcion', 'ASC');
+
+        if($request->has('pdf_report'))
+        {
+          $coleccion = $articulos->get();
+          $ordenado = $coleccion->sortBy('marca.marca');
+          $reporte = $ordenado->groupBy(['categoria.categoria', 'marca.marca'])->toArray();
+          $pdf = \PDF::loadView('reportes.articulos.lista', compact('reporte'));
+          return $pdf->stream();
+        }
+
+        $page_size = $request->exists('all') ? $articulos->count() : $request->get('page_size');
+
+        return $articulos->paginate($page_size);
 
     }
 
@@ -114,8 +132,20 @@ class ArticuloController extends Controller
     public function store(Request $request)
     {
         try{
-            $articulo = Articulo::create($request->all());
-            $movimientos = MovimientosStock::create(['id_articulo' => $articulo->id_articulo, 'fecha_movimiento' => $articulo->created_at, 'stock_ingreso' => $articulo->stock_actual]);
+            $datos = $request->all();
+
+            $categoria = Categoria::firstOrCreate(['categoria' => $request->get('nombre_categoria')]);
+            $datos['id_categoria'] = $categoria->id_categoria;
+
+            $marca = Marca::firstOrCreate(['marca' => $request->get('nombre_marca')]);
+            $datos['id_marca'] = $marca->id_marca;
+
+            $articulo = Articulo::create($datos);
+
+            if($request->get('stock_actual') > 0)
+            {
+                $movimientos = MovimientosStock::create(['id_articulo' => $articulo->id_articulo, 'fecha_movimiento' => $articulo->created_at, 'stock_ingreso' => $articulo->stock_actual]);
+            }
             return 'TODO OK';
         } catch( \Illuminate\Database\QueryException $e) {
                 return response()->json(array('mensaje' => $e->errorInfo[2]), 500);
@@ -154,6 +184,13 @@ class ArticuloController extends Controller
     public function update(Request $request, Articulo $articulo, MovimientosStock $movimientosStock)
     {
         try {
+            if(empty($request->get('id_categoria')) && $request->get('nombre_categoria'))
+            {
+                $categoria = new Categoria;
+                $categoria->categoria = $request->get('nombre_categoria');
+                $categoria->save();
+                $request->merge(['id_categoria', $categoria->id_categoria]);
+            }
             $articulo->update($request->all());
             return 'ACTUALIZADO';
         } catch( \Illuminate\Database\QueryException $e) {
@@ -171,7 +208,7 @@ class ArticuloController extends Controller
     {
         if($articulo)
         {
-            $articulo->movimientos_stock()->delete();
+            //$articulo->movimientos_stock()->delete();
             $articulo->delete();
             return $articulo;
         }
